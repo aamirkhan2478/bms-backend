@@ -1,11 +1,15 @@
-const chalk = require("chalk");
-const mongoose = require("mongoose");
-const DB = process.env.MONGO_URL;
-
-main()
-  .then((_) => console.log(chalk.bold.greenBright("MongoDB Connected Successfully")))
-  .catch((err) => console.log(chalk.bold.red(err)));
+import chalk from "chalk";
+import mongoose from "mongoose";
 
 async function main() {
-  await mongoose.connect(DB);
+  const DB = process.env.MONGO_URL;
+  try {
+    await mongoose.connect(DB);
+    console.log(chalk.bold.greenBright("Connection Successfully"));
+  } catch (error) {
+    console.log(chalk.bold.redBright(error));
+    console.log(chalk.bold.redBright("Connection Error"));
+  }
 }
+
+export default main;
