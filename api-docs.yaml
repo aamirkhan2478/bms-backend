@@ -1,0 +1,173 @@
+# Documentation comment for the selection
+
+#This code implements CRUD operations using Swagger documentation.
+swagger: "2.0"
+info:
+  title: BMS API
+  description: BMS API Documentation
+  version: 1.0.0
+host: localhost:5000
+basePath: /api
+schemes:
+  - http
+  - https
+paths:
+  /user/register:
+    post:
+      summary: Register a new user
+      tags: [Authentication]
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: User object that needs to be added to the database
+          required: true
+          schema:
+            $ref: '#/components/schemas/RegisterUser'
+      responses:
+        201:
+          description: Successful registration
+        400:
+          description: Invalid request data
+        500:
+          description: Internal server error  /user/register:
+  /user/login:  
+    post:
+      summary: Register a new user
+      tags: [Authentication]
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: User object that needs to be logged in
+          required: true
+          schema:
+            $ref: '#/components/schemas/LoginUser'
+      responses:
+        200:
+          description: Successful login
+        400:
+          description: Invalid request data
+        500:
+          description: Internal server error
+  /user/current-user:
+    get:
+      summary: Get current user
+      tags: [Authentication]
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: JWT token
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successful Show Current User
+        400:
+          description: Invalid request data
+        500:
+          description: Internal server error
+  /user/update-user/{id}:
+    put:
+      summary: Update user
+      tags: [Authentication]
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: JWT token
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: id
+          description: User ID
+          required: true
+          schema:
+            type: string
+        - in: body
+          name: body
+          description: User object that needs to be updated
+          required: true
+          schema:
+            $ref: '#/components/schemas/RegisterUser'
+      responses:
+        200:
+          description: Successful Update User
+        400:
+          description: Invalid request data
+        500:
+          description: Internal server error
+  /user/show-users:
+    get:
+      summary: Show all users
+      tags: [Authentication]
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: JWT token
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successful Show All Users
+        400:
+          description: Invalid request data
+        500:
+          description: Internal server error
+components:
+  schemas:
+    RegisterUser:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          description: The name for the new user.
+        email:
+          type: string
+          format: email
+          description: The email address of the new user.
+        password:
+          type: string
+          format: password
+          description: The password for the new user.
+        role:
+          type: string
+          description: The role for the new user.
+    LoginUser:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        password:
+          type: string
+          format: password
+          description: The password of the user.
