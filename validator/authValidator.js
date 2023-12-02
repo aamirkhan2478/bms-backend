@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const registerSchema = z.object({
+const authSchema = z.object({
   name: z
     .string({ required_error: "Name is required!" })
     .regex(/^(?=.{3,70}$)(?![a-z])(?!.*[_.]{2})[a-zA-Z ]+(?<![_.])$/, {
@@ -20,4 +20,4 @@ const registerSchema = z.object({
   role: z.enum(["super-admin", "admin", "user"]).default("user"),
 });
 
-export default registerSchema;
+export default authSchema;

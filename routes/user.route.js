@@ -10,15 +10,15 @@ import {
 } from "../controllers/user.controller.js";
 
 import auth from "../middlewares/auth.js";
-import { registerMiddleware } from "../middlewares/validatorMiddleware.js";
-import registerSchema from "../validator/authValidator.js";
+import  validatorMiddleware  from "../middlewares/validatorMiddleware.js";
+import authSchema from "../validator/authValidator.js";
 
-router.post("/register", registerMiddleware(registerSchema), register);
+router.post("/register", validatorMiddleware(authSchema), register);
 router.post("/login", login);
 router.put(
   "/update-user/:id",
   auth,
-  registerMiddleware(registerSchema),
+  validatorMiddleware(authSchema),
   updateUser
 );
 router.post("/refresh-token", auth, tokenRefresh);

@@ -5,13 +5,15 @@ import dotenv from "dotenv";
 import { notFound, errorHandler } from "./middlewares/errors.js";
 import swaggerSetup from "./swagger.js";
 import connection from "./db/connection.js";
-import userRouter from "./routes/user.route.js"
+import userRouter from "./routes/user.route.js";
+import inventoryRouter from "./routes/inventory.route.js";
+import auth from "./middlewares/auth.js";
 
 // Initialize express
 const app = express();
 
 // Configure dotenv
-dotenv.config({path: "./.env.local"});
+dotenv.config({ path: "./.env.local" });
 
 // Middleware
 app.use(express.json());
@@ -27,11 +29,12 @@ connection();
 
 // Starting endpoint
 app.get("/", (_req, res) => {
-    res.send("<h1 style='color:green;'>Hurrah! Server is running.</h1>");
+  res.send("<h1 style='color:green;'>Hurrah! Server is running.</h1>");
 });
 
 // Routes
 app.use("/api/user", userRouter);
+app.use("/api/inventory", auth, inventoryRouter);
 app.use(notFound);
 app.use(errorHandler);
 

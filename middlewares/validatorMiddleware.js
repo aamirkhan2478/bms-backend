@@ -1,4 +1,4 @@
-export const registerMiddleware = (schema) => async (req, res, next) => {
+const validatorMiddleware = (schema) => async (req, res, next) => {
   try {
     const parsedBody = await schema.parseAsync(req.body);
     req.body = parsedBody;
@@ -8,3 +8,5 @@ export const registerMiddleware = (schema) => async (req, res, next) => {
     res.status(400).json({ message });
   }
 };
+
+export default validatorMiddleware;
