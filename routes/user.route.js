@@ -9,9 +9,9 @@ import {
   showUsers,
 } from "../controllers/user.controller.js";
 
-import auth from "../middlewares/auth.js";
-import  validatorMiddleware  from "../middlewares/validatorMiddleware.js";
-import authSchema from "../validator/authValidator.js";
+import auth from "../middlewares/auth.middleware.js";
+import  validatorMiddleware  from "../middlewares/validator.middleware.js";
+import authSchema from "../validator/auth.validator.js";
 
 router.post("/register", validatorMiddleware(authSchema), register);
 router.post("/login", login);

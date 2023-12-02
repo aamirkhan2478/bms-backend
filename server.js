@@ -2,12 +2,12 @@ import express from "express";
 import chalk from "chalk";
 import cors from "cors";
 import dotenv from "dotenv";
-import { notFound, errorHandler } from "./middlewares/errors.js";
+import { notFound, errorHandler } from "./middlewares/errors.middleware.js";
 import swaggerSetup from "./swagger.js";
 import connection from "./db/connection.js";
 import userRouter from "./routes/user.route.js";
 import inventoryRouter from "./routes/inventory.route.js";
-import auth from "./middlewares/auth.js";
+import auth from "./middlewares/auth.middleware.js";
 
 // Initialize express
 const app = express();
