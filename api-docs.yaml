@@ -33,7 +33,7 @@ paths:
         400:
           description: Invalid request data
         500:
-          description: Internal server error  /user/register:
+          description: Internal server error
   /user/login:  
     post:
       summary: Register a new user
@@ -134,6 +134,34 @@ paths:
           description: Invalid request data
         500:
           description: Internal server error
+  /inventory/add-inventory:
+    post:
+      summary: Add inventory
+      tags: [Inventory]
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: Authorization
+          description: JWT token
+          required: true
+          schema:
+            type: string
+        - in: body
+          name: body
+          description: Inventory object that needs to be added to the database
+          required: true
+          schema:
+            $ref: '#/components/schemas/AddInventory'
+      responses:
+        201:
+          description: Successful Add Inventory
+        400:
+          description: Invalid request data
+        500:
+          description: Internal server error
 components:
   schemas:
     RegisterUser:
@@ -171,3 +199,19 @@ components:
           type: string
           format: password
           description: The password of the user.
+    AddInventory:
+      type: object
+      required:
+        - inventoryType
+        - floor
+        - flatNo
+      properties:
+        inventoryType:
+          type: string
+          description: The inventory type for the new inventory.
+        floor:
+          type: string
+          description: The floor number for the new inventory.
+        flatNo:
+          type: string
+          description: The flat number for the new inventory.
