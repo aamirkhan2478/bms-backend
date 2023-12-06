@@ -7,7 +7,9 @@ import swaggerSetup from "./swagger.js";
 import connection from "./db/connection.js";
 import userRouter from "./routes/user.route.js";
 import inventoryRouter from "./routes/inventory.route.js";
+import ownerRouter from "./routes/owner.route.js";
 import auth from "./middlewares/auth.middleware.js";
+import path from "path";
 
 // Initialize express
 const app = express();
@@ -15,9 +17,12 @@ const app = express();
 // Configure dotenv
 dotenv.config({ path: "./.env.local" });
 
+// Serve static files from the 'public' directory
+app.use(express.static('public'));
+
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: "30mb", extended: true }));
+app.use(express.urlencoded({ limit: "30mb", extended: true }));
 
 app.use(cors({ origin: process.env.CLIENT_URL }));
 
@@ -35,6 +40,7 @@ app.get("/", (_req, res) => {
 // Routes
 app.use("/api/user", userRouter);
 app.use("/api/inventory", auth, inventoryRouter);
+app.use("/api/owner", auth, ownerRouter);
 app.use(notFound);
 app.use(errorHandler);
 
