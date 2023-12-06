@@ -29,7 +29,7 @@ userSchema.methods.generateAccessToken = function () {
     { id: this._id, name: this.name, role: this.role, email: this.email },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: "15m",
+      expiresIn: "24h",
     }
   );
 };

@@ -14,14 +14,13 @@ const inventorySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    //   owner: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref:"Owner"
-    //   },
-    //   tenant: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref:"Tenant"
-    //   },
+    owners: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Owner",
+        default: null,
+      },
+    ],
     status: {
       type: String,
       enum: ["vacant", "occupied"],
