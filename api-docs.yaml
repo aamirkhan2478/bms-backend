@@ -215,3 +215,23 @@ components:
         flatNo:
           type: string
           description: The flat number for the new inventory.
+    AddOwner:
+      type: object
+      required:
+        - name
+        - fatherName
+        - cnic
+        - phoneNumber
+        - email
+        - emergencyNumber
+        - whatsappNumber
+      properties:
+        inventoryType:
+          type: string
+          description: The inventory type for the new inventory.
+        floor:
+          type: string
+          description: The floor number for the new inventory.
+        flatNo:
+          type: string
+          description: The flat number for the new inventory.

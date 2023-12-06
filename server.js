@@ -8,8 +8,8 @@ import connection from "./db/connection.js";
 import userRouter from "./routes/user.route.js";
 import inventoryRouter from "./routes/inventory.route.js";
 import ownerRouter from "./routes/owner.route.js";
+import tenantRouter from "./routes/tenant.route.js";
 import auth from "./middlewares/auth.middleware.js";
-import path from "path";
 
 // Initialize express
 const app = express();
@@ -41,6 +41,7 @@ app.get("/", (_req, res) => {
 app.use("/api/user", userRouter);
 app.use("/api/inventory", auth, inventoryRouter);
 app.use("/api/owner", auth, ownerRouter);
+app.use("/api/tenant", auth, tenantRouter);
 app.use(notFound);
 app.use(errorHandler);
 

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const ownerSchema = z.object({
+const ownerTenantSchema = z.object({
   name: z
     .string({ required_error: "Name is required!" })
     .regex(/^(?=.{3,70}$)(?![a-z])(?!.*[_.]{2})[a-zA-Z ]+(?<![_.])$/, {
@@ -80,4 +80,4 @@ const ownerSchema = z.object({
   inventory: z.array(z.string().optional()),
 });
 
-export default ownerSchema;
+export default ownerTenantSchema;
