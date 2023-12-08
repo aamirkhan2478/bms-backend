@@ -18,7 +18,6 @@ export const addTenant = async (req, res) => {
     jobTitle,
     jobLocation,
     jobOrganization,
-    inventory,
   } = req.body;
 
   const { id } = req.user;
@@ -26,7 +25,6 @@ export const addTenant = async (req, res) => {
     const phoneNumbers = mappingArray(phoneNumber);
     const emergencyNumbers = mappingArray(emergencyNumber);
     const whatsappNumbers = mappingArray(whatsapp);
-    const inventories = mappingArray(inventory);
 
     // upload images
     const files = req.files;
@@ -63,7 +61,6 @@ export const addTenant = async (req, res) => {
       jobLocation,
       jobOrganization,
       images: imagesArray,
-      inventory: inventories,
       createdBy: id,
     });
 
