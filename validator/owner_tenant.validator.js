@@ -77,7 +77,6 @@ const ownerTenantSchema = z.object({
     })
     .optional(),
   remarks: z.string().optional(),
-  inventory: z.array(z.string().optional()),
 });
 
 export default ownerTenantSchema;

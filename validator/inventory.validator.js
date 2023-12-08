@@ -9,8 +9,7 @@ const inventorySchema = z.object({
       message:
         "The flat/shop/office number should be positive and greater then 2 digits!",
     }),
-  status: z.enum(["vacant", "occupied"]).default("vacant"),
-  isSold: z.boolean().default(false),
+  status: z.enum(["for sell", "sold", "rented"]).default("for sell"),
 });
 
 export default inventorySchema;
