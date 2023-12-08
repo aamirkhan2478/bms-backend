@@ -9,6 +9,7 @@ import userRouter from "./routes/user.route.js";
 import inventoryRouter from "./routes/inventory.route.js";
 import ownerRouter from "./routes/owner.route.js";
 import tenantRouter from "./routes/tenant.route.js";
+import sellInventoryRouter from "./routes/sell_inventory.route.js";
 import auth from "./middlewares/auth.middleware.js";
 
 // Initialize express
@@ -42,6 +43,7 @@ app.use("/api/user", userRouter);
 app.use("/api/inventory", auth, inventoryRouter);
 app.use("/api/owner", auth, ownerRouter);
 app.use("/api/tenant", auth, tenantRouter);
+app.use("/api/sell-inventory", auth, sellInventoryRouter);
 app.use(notFound);
 app.use(errorHandler);
 
