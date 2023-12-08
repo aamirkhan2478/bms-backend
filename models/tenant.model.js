@@ -82,7 +82,7 @@ const tenantSchema = new mongoose.Schema(
     remarks: {
       type: String,
     },
-    inventory: [
+    inventories: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Inventory",
