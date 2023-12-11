@@ -10,6 +10,8 @@ import inventoryRouter from "./routes/inventory.route.js";
 import ownerRouter from "./routes/owner.route.js";
 import tenantRouter from "./routes/tenant.route.js";
 import sellInventoryRouter from "./routes/sell_inventory.route.js";
+import contractRouter from "./routes/contract.route.js";
+import agentRouter from "./routes/agent.route.js";
 import auth from "./middlewares/auth.middleware.js";
 
 // Initialize express
@@ -19,7 +21,7 @@ const app = express();
 dotenv.config({ path: "./.env.local" });
 
 // Serve static files from the 'public' directory
-app.use(express.static('public'));
+app.use(express.static("public"));
 
 // Middleware
 app.use(express.json({ limit: "30mb", extended: true }));
@@ -44,6 +46,9 @@ app.use("/api/inventory", auth, inventoryRouter);
 app.use("/api/owner", auth, ownerRouter);
 app.use("/api/tenant", auth, tenantRouter);
 app.use("/api/sell-inventory", auth, sellInventoryRouter);
+app.use("/api/contract", auth, contractRouter);
+app.use("/api/agent", auth, agentRouter);
+
 app.use(notFound);
 app.use(errorHandler);
 
