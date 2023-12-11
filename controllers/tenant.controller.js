@@ -3,6 +3,9 @@ import Tenant from "../models/tenant.model.js";
 import mappingArray from "../utils/mapping_arrays.utils.js";
 import fileArray from "../utils/upload_images.utils.js";
 
+// @route   POST /api/tenant/add
+// @desc    Add new tenant
+// @access  Private
 export const addTenant = async (req, res) => {
   const {
     name,
@@ -71,5 +74,17 @@ export const addTenant = async (req, res) => {
   } catch (error) {
     console.log(chalk.redBright.bold(error));
     return res.status(500).json({ message: error.message });
+  }
+};
+
+// @route   GET /api/tenant/all
+// @desc    Get all tenants
+// @access  Private
+export const showTenants = async (_req, res) => {
+  try {
+    const tenants = await Tenant.find().populate("createdBy", "name -_id");
+    return res.status(200).json({ tenants });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
   }
 };
