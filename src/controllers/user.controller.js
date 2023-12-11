@@ -2,6 +2,9 @@ import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+// @route   POST /api/user/register
+// @desc    Register new user
+// @access  Private
 export const register = async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
@@ -18,6 +21,9 @@ export const register = async (req, res) => {
   }
 };
 
+// @route   POST /api/user/login
+// @desc    Login user
+// @access  Public
 export const login = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -37,6 +43,9 @@ export const login = async (req, res) => {
   }
 };
 
+// @route   DELETE /api/user/update/:id
+// @desc    Delete user
+// @access  Private
 export const updateUser = async (req, res) => {
   const { name, email, password, role } = req.body;
   const { id } = req.params;
@@ -64,6 +73,9 @@ export const updateUser = async (req, res) => {
   }
 };
 
+// @route   GET /api/user/show-users
+// @desc    Get all users
+// @access  Private
 export const showUsers = async (req, res) => {
   try {
     const users = await User.find({}).select("-password");
@@ -73,11 +85,17 @@ export const showUsers = async (req, res) => {
   }
 };
 
+// @route   GET /api/user/current-user
+// @desc    Get current user
+// @access  Private
 export const loggedInUser = (req, res) => {
   const currentUser = req.user;
   return res.status(200).json({ currentUser });
 };
 
+// @route   POST /api/user/refresh-token
+// @desc    Refresh token
+// @access  Private
 export const tokenRefresh = async (req, res) => {
   try {
     const { refreshToken } = req.body;

@@ -2,17 +2,16 @@ import express from "express";
 import chalk from "chalk";
 import cors from "cors";
 import dotenv from "dotenv";
-import { notFound, errorHandler } from "./middlewares/errors.middleware.js";
+import { notFound, errorHandler } from "./src/middlewares/errors.middleware.js";
 import swaggerSetup from "./swagger.js";
-import connection from "./db/connection.js";
-import userRouter from "./routes/user.route.js";
-import inventoryRouter from "./routes/inventory.route.js";
-import ownerRouter from "./routes/owner.route.js";
-import tenantRouter from "./routes/tenant.route.js";
-import sellInventoryRouter from "./routes/sell_inventory.route.js";
-import contractRouter from "./routes/contract.route.js";
-import agentRouter from "./routes/agent.route.js";
-import auth from "./middlewares/auth.middleware.js";
+import connection from "./src/db/connection.js";
+import userRouter from "./src/routes/user.routes.js";
+import inventoryRouter from "./src/routes/inventory.routes.js";
+import ownerRouter from "./src/routes/owner.routes.js";
+import tenantRouter from "./src/routes/tenant.routes.js";
+import contractRouter from "./src/routes/contract.routes.js";
+import agentRouter from "./src/routes/agent.routes.js";
+import auth from "./src/middlewares/auth.middleware.js";
 
 // Initialize express
 const app = express();
@@ -45,7 +44,6 @@ app.use("/api/user", userRouter);
 app.use("/api/inventory", auth, inventoryRouter);
 app.use("/api/owner", auth, ownerRouter);
 app.use("/api/tenant", auth, tenantRouter);
-app.use("/api/sell-inventory", auth, sellInventoryRouter);
 app.use("/api/contract", auth, contractRouter);
 app.use("/api/agent", auth, agentRouter);
 
