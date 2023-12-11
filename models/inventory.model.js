@@ -54,6 +54,13 @@ const inventorySchema = new mongoose.Schema(
         default: null,
       },
     ],
+    contracts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Contract",
+        default: null,
+      },
+    ],
     status: {
       type: String,
       enum: ["for sell", "sold", "rented"],

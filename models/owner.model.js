@@ -89,6 +89,13 @@ const ownerSchema = new mongoose.Schema(
         default: null,
       },
     ],
+    contracts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Contract",
+        default: null,
+      },
+    ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
