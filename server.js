@@ -12,6 +12,7 @@ import tenantRouter from "./src/routes/tenant.routes.js";
 import contractRouter from "./src/routes/contract.routes.js";
 import agentRouter from "./src/routes/agent.routes.js";
 import auth from "./src/middlewares/auth.middleware.js";
+import cookieParser from "cookie-parser";
 
 // Initialize express
 const app = express();
@@ -27,6 +28,8 @@ app.use(express.json({ limit: "30mb", extended: true }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
 
 app.use(cors({ origin: process.env.CLIENT_URL }));
+
+app.use(cookieParser());
 
 // Configure Swagger
 swaggerSetup(app);

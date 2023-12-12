@@ -37,6 +37,9 @@ export const login = async (req, res) => {
     }
     const accessToken = emailExist.generateAccessToken();
     const refreshToken = emailExist.generateRefreshToken();
+
+    // Set the token in a cookie
+    res.cookie("token", accessToken, { httpOnly: true, maxAge: 86400000 }); // maxAge is in milliseconds (24 hour in this example)
     return res.status(200).json({ accessToken, refreshToken });
   } catch (err) {
     return res.status(500).json({ message: err.message });
