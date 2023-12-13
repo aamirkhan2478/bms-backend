@@ -117,3 +117,17 @@ export const tokenRefresh = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+// @route   GET /api/user/logout
+// @desc    Logout user
+// @access  Private
+export const userLogout = (_req, res) => {
+  try {
+    res.clearCookie("token");
+    
+    return res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
