@@ -1,30 +1,25 @@
 import Agent from "../models/agent.model.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import asyncHandler from "../utils/AsyncHandler.js";
 
 // @route   POST /api/agent/add
 // @desc    Add new agent
 // @access  Private
-export const addAgent = async (req, res) => {
+export const addAgent = asyncHandler(async (req, res) => {
   const { name } = req.body;
 
-  const { id } = req.user;
+  const { _id: id } = req.user;
 
-  try {
-    const agent = new Agent({ name, createdBy: id });
-    await agent.save();
-    return res.status(201).json({ message: "Agent added successfully" });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
-  }
-};
+  const agent = new Agent({ name, createdBy: id });
+  await agent.save();
+
+  return res.status(201).json(new ApiResponse(200, { agent }, "Agent added"));
+});
 
 // @route   GET /api/agent/all
 // @desc    Get all agents
 // @access  Private
-export const showAgents = async (_req, res) => {
-  try {
+export const showAgents = asyncHandler(async (_, res) => {
     const agents = await Agent.find().populate("createdBy", "name -_id");
-    return res.status(200).json({ agents });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
-  }
-};
+    return res.status(200).json(new ApiResponse(200, { agents }, "Agents found"));
+});

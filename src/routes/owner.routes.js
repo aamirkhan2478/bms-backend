@@ -9,12 +9,12 @@ import validatorMiddleware from "../middlewares/validator.middleware.js";
 import upload from "../middlewares/multer.middleware.js";
 
 router
+  .route("/add")
   .post(
-    "/add",
     upload.array("images", 10),
     validatorMiddleware(ownerTenantSchema),
     addOwner
-  )
-  .get("/show-inventories", showInventoriesWithSpecificOwners);
+  );
+router.route("/show-inventories").get(showInventoriesWithSpecificOwners);
 
 export default router;

@@ -9,9 +9,10 @@ import inventorySchema from "../validator/inventory.validator.js";
 import sellInventorySchema from "../validator/sell_inventory.validator.js";
 const router = express.Router();
 
+router.route("/add").post(validatorMiddleware(inventorySchema), addInventory);
 router
-  .post("/add", validatorMiddleware(inventorySchema), addInventory)
-  .put("/sell", validatorMiddleware(sellInventorySchema), sellInventory)
-  .get("/show-owners", showOwnersWithSpecificInventories);
+  .route("/sell")
+  .put(validatorMiddleware(sellInventorySchema), sellInventory);
+router.route("/show-owners").get(showOwnersWithSpecificInventories);
 
 export default router;

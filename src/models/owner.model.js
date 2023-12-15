@@ -22,7 +22,7 @@ const ownerSchema = new mongoose.Schema(
     phoneNumber: [
       {
         type: String,
-        required: true,
+        default: null,
       },
     ],
     emergencyNumber: [
@@ -34,12 +34,11 @@ const ownerSchema = new mongoose.Schema(
     whatsapp: [
       {
         type: String,
-        required: true,
+        default: null,
       },
     ],
     email: {
       type: String,
-      required: true,
       unique: true,
     },
     currentAddress: {
@@ -62,6 +61,7 @@ const ownerSchema = new mongoose.Schema(
     images: [
       {
         type: String,
+        default: null,
       },
     ],
     bankName: {

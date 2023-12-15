@@ -39,13 +39,9 @@ const ownerTenantSchema = z.object({
 
       return true;
     }),
-  phoneNumber: z
-    .array(z.string({ required_error: "Phone number is required!" }))
-    .nonempty({ message: "Phone number is required!" }),
-  emergencyNumber: z.array(z.string()).optional().default([]),
-  whatsapp: z
-    .array(z.string({ required_error: "Whatsapp number is required!" }))
-    .nonempty({ message: "Whatsapp number is required!" }),
+  phoneNumber: z.array(z.string()).optional(),
+  emergencyNumber: z.array(z.string()).optional(),
+  whatsapp: z.array(z.string()).optional(),
   email: z.string().email({
     required_error: "Email is required!",
     message: "Invalid email address!",

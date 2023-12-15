@@ -6,12 +6,12 @@ import upload from "../middlewares/multer.middleware.js";
 import ownerTenantSchema from "../validator/owner_tenant.validator.js";
 
 router
+  .route("/add")
   .post(
-    "/add",
     upload.array("images", 10),
     validatorMiddleware(ownerTenantSchema),
     addTenant
-  )
-  .get("/all", showTenants);
+  );
+router.route("/all").get(showTenants);
 
 export default router;

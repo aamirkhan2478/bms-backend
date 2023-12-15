@@ -1,133 +1,202 @@
 import User from "../models/user.model.js";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { ApiError } from "../utils/ApiError.js";
+import asyncHandler from "../utils/AsyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 // @route   POST /api/user/register
 // @desc    Register new user
 // @access  Private
-export const register = async (req, res) => {
+export const register = asyncHandler(async (req, res) => {
+  // Get the user input
   const { name, email, password, role } = req.body;
-  try {
-    const emailExist = await User.findOne({ email });
-    if (emailExist) {
-      return res.status(400).json({ message: "Email already exists" });
-    }
-    const user = new User({ name, email, password, role });
-    await user.save();
 
-    return res.status(201).json({ message: "User registered successfully" });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
+  // Check if user exists
+  const emailExist = await User.findOne({ email });
+  if (emailExist) {
+    throw new ApiError(400, "Email already exists");
   }
-};
+
+  // Create new user
+  const user = new User({ name, email, password, role });
+  await user.save();
+
+  return res.status(201).json(new ApiResponse(200, {}, "User created"));
+});
 
 // @route   POST /api/user/login
 // @desc    Login user
 // @access  Public
-export const login = async (req, res) => {
+export const login = asyncHandler(async (req, res) => {
+  // Get the user input
   const { email, password } = req.body;
-  try {
-    const emailExist = await User.findOne({ email });
-    if (!emailExist) {
-      return res.status(400).json({ message: "Email does not exists" });
-    }
-    const isMatch = await bcrypt.compare(password, emailExist.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-    const accessToken = emailExist.generateAccessToken();
-    const refreshToken = emailExist.generateRefreshToken();
 
-    // Set the token in a cookie
-    res.cookie("token", accessToken, { httpOnly: true, maxAge: 86400000 }); // maxAge is in milliseconds (24 hour in this example)
-    return res.status(200).json({ accessToken, refreshToken });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
+  // Check if user exists
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new ApiError(400, "Invalid credentials");
   }
-};
 
-// @route   DELETE /api/user/update/:id
-// @desc    Delete user
+  // Check if password matches
+  const isMatch = await user.matchPassword(password);
+  if (!isMatch) {
+    throw new ApiError(400, "Invalid credentials");
+  }
+
+  // Generate tokens
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+
+  // Get the logged in user
+  const loggedInUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
+
+  // Set the token in a cookie
+  const options = {
+    expires: new Date(Date.now() + 86400000), // 24 hours
+    httpOnly: true,
+    secure: process.env.SECURE || false, // set to true if your using https
+  };
+
+  return res
+    .status(200)
+    .cookie("token", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(200, { user: loggedInUser }, "Logged in successfully")
+    );
+});
+
+// @route   UPDATE /api/user/:id/update
+// @desc    Update user
 // @access  Private
-export const updateUser = async (req, res) => {
+export const updateUser = asyncHandler(async (req, res) => {
+  // Get the user input
   const { name, email, password, role } = req.body;
+
+  // Get the user id
   const { id } = req.params;
-  try {
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    if (name) {
-      user.name = name;
-    }
-    if (email) {
-      user.email = email;
-    }
-    if (password) {
-      user.password = password;
-    }
-    if (role) {
-      user.role = role;
-    }
-    await user.save();
-    return res.status(200).json({ message: "User updated successfully" });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
+
+  // Check if user exists
+  const user = await User.findById(id);
+  if (!user) {
+    throw new ApiError(404, "User not found");
   }
-};
+
+  // Update user
+  if (name) {
+    user.name = name;
+  }
+
+  if (email) {
+    user.email = email;
+  }
+
+  if (password) {
+    user.password = password;
+  }
+
+  if (role) {
+    user.role = role;
+  }
+
+  await user.save();
+
+  return res.status(200).json(new ApiResponse(200, {}, "User updated"));
+});
 
 // @route   GET /api/user/show-users
 // @desc    Get all users
 // @access  Private
-export const showUsers = async (req, res) => {
-  try {
-    const users = await User.find({}).select("-password");
-    return res.status(200).json({ users });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
-  }
-};
-
-// @route   GET /api/user/current-user
-// @desc    Get current user
-// @access  Private
-export const loggedInUser = (req, res) => {
-  const currentUser = req.user;
-  return res.status(200).json({ currentUser });
-};
+export const showUsers = asyncHandler(async (_, res) => {
+  // Get all users
+  const users = await User.find({}).select("-password -refreshToken");
+  return res.status(200).json(new ApiResponse(200, { users }, "Users found"));
+});
 
 // @route   POST /api/user/refresh-token
 // @desc    Refresh token
 // @access  Private
-export const tokenRefresh = async (req, res) => {
-  try {
-    const { refreshToken } = req.body;
-    if (!refreshToken) {
-      return res.status(401).json({ message: "No token provided" });
-    }
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-    const accessToken = user.generateAccessToken();
-    const newRefreshToken = user.generateRefreshToken();
-    return res.status(200).json({ accessToken, refreshToken: newRefreshToken });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
+export const tokenRefresh = asyncHandler(async (req, res) => {
+  // Get the refresh token from the request cookies
+  const { refreshToken } = req.cookies;
+  if (!refreshToken) {
+    throw new ApiError(401, "No refresh token provided");
   }
-};
 
-// @route   GET /api/user/logout
+  // Verify the refresh token
+  const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+  // Find the user by the decoded token id
+  const user = await User.findById(decoded.id);
+
+  // If no user is found
+  if (!user) {
+    throw new ApiError(404, "Invalid refresh token");
+  }
+
+  // Generate new tokens
+  const { accessToken, refreshToken: newRefreshToken } =
+    generateAccessAndRefreshToken(user._id);
+
+  // Attach the new tokens to the response cookie
+  const options = {
+    expires: new Date(Date.now() + 86400000), // 24 hours
+    httpOnly: true,
+    secure: process.env.SECURE || false, // set to true if your using https
+  };
+
+  return res
+    .status(200)
+    .cookie("token", accessToken, options)
+    .cookie("refreshToken", newRefreshToken, options)
+    .json(new ApiResponse(200, {}, "Token refreshed successfully"));
+});
+
+// @route   POST /api/user/logout
 // @desc    Logout user
 // @access  Private
-export const userLogout = (_req, res) => {
+export const userLogout = asyncHandler(async (req, res) => {
+  const { _id: id } = req.user;
+  // Remove the refresh token from the database
+  await User.findByIdAndUpdate(
+    id,
+    { $set: { refreshToken: undefined } },
+    { new: true }
+  );
+
+  // Clear the cookies
+  const options = {
+    expires: new Date(Date.now() + 1000),
+    httpOnly: true,
+    secure: process.env.SECURE || false, // set to true if your using https
+  };
+
+  return res
+    .status(200)
+    .clearCookie("token", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "Logged out successfully"));
+});
+
+// Private Functions
+
+// Generate JWT Token
+async function generateAccessAndRefreshToken(userID) {
   try {
-    res.clearCookie("token");
-    
-    return res.status(200).json({ message: "Logged out successfully" });
+    const user = await User.findById(userID);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: error.message });
+    throw new ApiError(
+      500,
+      "Something went wrong while generating tokens for the user"
+    );
   }
-};
+}

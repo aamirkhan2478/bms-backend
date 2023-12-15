@@ -4,7 +4,6 @@ import {
   register,
   login,
   updateUser,
-  loggedInUser,
   tokenRefresh,
   showUsers,
   userLogout,
@@ -14,13 +13,13 @@ import auth from "../middlewares/auth.middleware.js";
 import validatorMiddleware from "../middlewares/validator.middleware.js";
 import authSchema from "../validator/auth.validator.js";
 
+router.route("/register").post(auth, validatorMiddleware(authSchema), register);
+router.route("/login").post(login);
+router.route("/logout").post(auth, userLogout);
 router
-  .post("/register", auth, validatorMiddleware(authSchema), register)
-  .post("/login", login)
-  .put("/update/:id", auth, validatorMiddleware(authSchema), updateUser)
-  .post("/refresh-token", auth, tokenRefresh)
-  .get("/current-user", auth, loggedInUser)
-  .get("/show-users", auth, showUsers)
-  .get("/logout", auth, userLogout);
+  .route("/:id/update")
+  .put(auth, validatorMiddleware(authSchema), updateUser);
+router.route("/refresh-token").post(auth, tokenRefresh);
+router.route("/show-users").get(auth, showUsers);
 
 export default router;

@@ -21,7 +21,7 @@ const app = express();
 dotenv.config({ path: "./.env.local" });
 
 // Serve static files from the 'public' directory
-app.use(express.static("public"));
+app.use(express.static("./public"));
 
 // Middleware
 app.use(express.json({ limit: "30mb", extended: true }));

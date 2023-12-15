@@ -1,33 +1,38 @@
 import jwt from "jsonwebtoken";
+import asyncHandler from "../utils/AsyncHandler.js";
+import User from "../models/user.model.js";
+import { ApiError } from "../utils/ApiError.js";
 
-const auth = (req, res, next) => {
-  // Get the token from the request headers
-  const authorizationHeader = req.headers.authorization;
-  const tokenInCookies = req.cookies.token;
-  
-  if (!authorizationHeader && !tokenInCookies) {
-    return res.status(401).json({ message: "No token provided" });
-  }
-
-  // Extract the token from the Authorization header
-  const [bearer, token] = authorizationHeader.split(" ");
-
-  if (bearer !== "Bearer" || !token) {
-    return res.status(401).json({ message: "Invalid token format" });
-  }
-
+const auth = asyncHandler(async (req, _, next) => {
   try {
+    // Get the token from the request headers
+    const token = req.cookies.token;
+
+    if (!token) {
+      throw new ApiError(401, "No token provided");
+    }
+
     // Verify the token
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
+    // Find the user by the decoded token id
+    const user = await User.findById(decoded.id).select(
+      "-password -refreshToken"
+    );
+
+    // If no user is found
+    if (!user) {
+      throw new ApiError(404, "Invalid access token");
+    }
+
     // Attach the decoded user information to the request object
-    req.user = decoded;
+    req.user = user;
 
     // Call the next middleware or route handler
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Invalid token" });
+    throw new ApiError(401, error?.message || "Invalid token");
   }
-};
+});
 
 export default auth;

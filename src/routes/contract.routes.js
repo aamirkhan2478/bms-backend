@@ -5,11 +5,12 @@ import validatorMiddleware from "../middlewares/validator.middleware.js";
 import upload from "../middlewares/multer.middleware.js";
 import contractSchema from "../validator/contract.validator.js";
 
-router.post(
-  "/add",
-  upload.array("images", 10),
-  validatorMiddleware(contractSchema),
-  addContract
-);
+router
+  .route("/add")
+  .post(
+    upload.array("images", 10),
+    validatorMiddleware(contractSchema),
+    addContract
+  );
 
 export default router;
