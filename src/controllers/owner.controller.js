@@ -38,7 +38,7 @@ export const addOwner = asyncHandler(async (req, res) => {
   // https://domainname.com/uploads/filename-dfse3453ds.jpeg
   const basePath = `${req.protocol}://${req.get("host")}/uploads/`;
 
-  const imagesArray = fileArray(files, basePath);
+  const imagesArray = await fileArray(files, basePath);
 
   // Check if email already exists
   const emailExist = await Owner.findOne({ email });
