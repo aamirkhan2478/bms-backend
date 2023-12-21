@@ -75,7 +75,7 @@ export const addContract = asyncHandler(async (req, res) => {
   // https://domainname.com/uploads/filename-dfse3453ds.jpeg
   const basePath = `${req.protocol}://${req.get("host")}/uploads/`;
 
-  const imagesArray = fileArray(files, basePath);
+  const imagesArray = await fileArray(files, basePath);
 
   const contract = new Contract({
     tenants: tenantArray,
