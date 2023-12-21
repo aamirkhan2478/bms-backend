@@ -77,7 +77,7 @@ const contractSchema = new mongoose.Schema({
     ref: "Agent",
   },
   terminationNoticePeriod: {
-    type: Number,
+    type: String,
     required: true,
   },
   nonrefundableSecurityDeposit: {
