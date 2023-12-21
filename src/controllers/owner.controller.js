@@ -74,6 +74,49 @@ export const addOwner = asyncHandler(async (req, res) => {
   return res.status(201).json(new ApiResponse(200, { owner }, "Owner added"));
 });
 
+// @route   GET /api/owner/all
+// @desc    Get all owners
+// @access  Private
+export const showOwners = asyncHandler(async (_, res) => {
+  const owners = await Owner.aggregate([
+    {
+      $lookup: {
+        from: "users",
+        localField: "createdBy",
+        foreignField: "_id",
+        as: "createdBy",
+      },
+    },
+    {
+      $unwind: "$createdBy",
+    },
+    {
+      $project: {
+        name: 1,
+        father: 1,
+        cnic: 1,
+        cnicExpiry: 1,
+        phoneNumber: 1,
+        emergencyNumber: 1,
+        whatsapp: 1,
+        email: 1,
+        currentAddress: 1,
+        permanentAddress: 1,
+        jobTitle: 1,
+        jobLocation: 1,
+        jobOrganization: 1,
+        images: 1,
+        inventories: 1,
+        createdBy: {
+          name: 1,
+          _id: 1,
+        },
+      },
+    },
+  ]);
+  return res.status(200).json(new ApiResponse(200, { owners }, "Owners found"));
+});
+
 // @route   GET /api/owner/show-inventories
 // @desc    Get all inventories with their owners
 // @access  Private
@@ -86,9 +129,18 @@ export const showInventoriesWithSpecificOwners = asyncHandler(
     ownerIds = ownerIds.split(",").map((id) => id.trim());
 
     // Select only the owner Ids
-    const owners = await Owner.find({
-      _id: { $in: ownerIds },
-    }).select("_id");
+    const owners = await Owner.aggregate([
+      {
+        $match: {
+          _id: { $in: ownerIds.map((id) => new mongoose.Types.ObjectId(id)) },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+        },
+      },
+    ]);
 
     // Extract the owner IDs from the retrieved owners
     const ids = owners.map((owner) => owner._id);
@@ -104,9 +156,38 @@ export const showInventoriesWithSpecificOwners = asyncHandler(
     }
 
     // Retrieve only the inventories that belong to the specified owners
-    const inventories = await Inventory.find({
-      owners: { $in: ids },
-    }).select("inventoryType floor flatNo");
+    const inventories = await Inventory.aggregate([
+      {
+        $match: {
+          owners: { $in: ids },
+        },
+      },
+      {
+        $lookup: {
+          from: "owners",
+          localField: "owners",
+          foreignField: "_id",
+          as: "owners",
+        },
+      },
+      {
+        $project: {
+          inventoryType: 1,
+          floor: 1,
+          flatNo: 1,
+          owners: {
+            $map: {
+              input: "$owners",
+              as: "owner",
+              in: {
+                _id: "$$owner._id",
+                name: "$$owner.name",
+              },
+            },
+          },
+        },
+      },
+    ]);
 
     return res
       .status(200)
