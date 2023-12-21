@@ -81,30 +81,9 @@ const contractValidator = z.object({
   annualRentalIncrease: z.string({
     required_error: "Annual rental increase is required!",
   }),
-  wapdaSubmeterReading: z
-    .number({
-      invalid_type_error: "Wapda submeter reading must be a number!",
-    })
-    .int({ message: "Wapda submeter reading must be an integer!" })
-    .positive({ message: "Wapda submeter reading must be a positive number!" })
-    .optional(),
-  generatorSubmeterReading: z
-    .number({
-      invalid_type_error: "Generator submeter reading must be a number!",
-    })
-    .int({ message: "Generator submeter reading must be an integer!" })
-    .positive({
-      message: "Generator submeter reading must be a positive number!",
-    })
-    .optional(),
-  waterSubmeterReading: z
-    .number({
-      required_error: "Water submeter reading is required!",
-      invalid_type_error: "Water submeter reading must be a number!",
-    })
-    .int({ message: "Water submeter reading must be an integer!" })
-    .positive({ message: "Water submeter reading must be a positive number!" })
-    .optional(),
+  wapdaSubmeterReading: z.string().optional(),
+  generatorSubmeterReading: z.string().optional(),
+  waterSubmeterReading: z.string().optional(),
   monthlyRentalDueDate: z.string({
     required_error: "Monthly rental due date is required!",
   }),
