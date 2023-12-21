@@ -14,32 +14,6 @@ const inventorySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // owners: [
-    //   {
-    //     owner: {
-    //       type: mongoose.Schema.Types.ObjectId,
-    //       ref: "Owner",
-    //       default: null,
-    //     },
-    //     isActive: {
-    //       type: Boolean,
-    //       default: false,
-    //     },
-    //   },
-    // ],
-    // tenants: [
-    //   {
-    //     tenant: {
-    //       type: mongoose.Schema.Types.ObjectId,
-    //       ref: "Tenant",
-    //       default: null,
-    //     },
-    //     isActive: {
-    //       type: Boolean,
-    //       default: false,
-    //     },
-    //   },
-    // ],
     owners: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -69,6 +43,10 @@ const inventorySchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+    },
+    purchaseDate: {
+      type: Date,
+      default: new Date(),
     },
   },
   { timestamps: true }
