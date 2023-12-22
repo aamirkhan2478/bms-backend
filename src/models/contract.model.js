@@ -7,12 +7,11 @@ const contractSchema = new mongoose.Schema({
       ref: "Tenant",
     },
   ],
-  inventories: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Inventory",
-    },
-  ],
+  inventory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Inventory",
+  },
+
   owners: [
     {
       type: mongoose.Schema.Types.ObjectId,
