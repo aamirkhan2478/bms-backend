@@ -16,9 +16,16 @@ const inventorySchema = new mongoose.Schema(
     },
     owners: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Owner",
-        default: null,
+        _id: false,
+        owner: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Owner",
+          default: null,
+        },
+        purchaseDate: {
+          type: Date,
+          default: null,
+        },
       },
     ],
     tenants: [
@@ -43,10 +50,6 @@ const inventorySchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-    },
-    purchaseDate: {
-      type: Date,
-      default: new Date(),
     },
   },
   { timestamps: true }
