@@ -4,9 +4,7 @@ const contractValidator = z.object({
   tenants: z
     .array(z.string({ required_error: "Tenant is required!" }))
     .nonempty({ message: "At least one tenant is required!" }),
-  inventories: z
-    .array(z.string({ required_error: "Inventory is required!" }))
-    .nonempty({ message: "At least one inventory is required!" }),
+  inventory: z.string({ required_error: "Inventory is required!" }),
   owners: z
     .array(z.string({ required_error: "Owner is required!" }))
     .nonempty({ message: "At least one owner is required!" }),
