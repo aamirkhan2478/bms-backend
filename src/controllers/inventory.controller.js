@@ -26,13 +26,14 @@ export const addInventory = asyncHandler(async (req, res) => {
 // @desc    Sell inventory
 // @access  Private
 export const sellInventory = asyncHandler(async (req, res) => {
-  const { owners, inventories, purchaseDate } = req.body;
+  const { owners, inventories } = req.body;
   const status = "sold";
 
   const inventoriesArray = mappingArray(inventories);
   const ownersArray = mappingArray(owners);
 
-  for (const owner of ownersArray) {
+  for (const mappedOwner of ownersArray) {
+    const { owner } = mappedOwner;
     await Owner.findByIdAndUpdate(
       owner,
       {
@@ -43,12 +44,13 @@ export const sellInventory = asyncHandler(async (req, res) => {
   }
 
   // update owners and tenants ids in inventory model
-  for (const inventory of inventories) {
+  for (const newInventory of inventories) {
+    const { inventory } = newInventory;
     await Inventory.findByIdAndUpdate(
       inventory,
       {
         $addToSet: { owners: { $each: ownersArray } },
-        $set: { status, purchaseDate },
+        $set: { status },
       },
       { new: true }
     );
@@ -97,36 +99,31 @@ export const showInventories = asyncHandler(async (_, res) => {
 // @route   GET /api/inventory/show-owners
 // @desc    Get all owners with their inventories
 // @access  Private
-export const showOwnersWithSpecificInventories = asyncHandler(
+export const shownInventoriesWithOwners = asyncHandler(
   async (_, res) => {
-    const owners = await Inventory.aggregate([
+    const inventoriesWithOwners = await Inventory.aggregate([
       {
         $lookup: {
-          from: "owners", // Assuming 'owners' is the collection name
-          localField: "owners",
+          from: "owners",
+          localField: "owners.owner",
           foreignField: "_id",
-          as: "ownersData",
+          as: "owners",
         },
       },
       {
         $project: {
-          _id: 0,
-          owners: {
-            $map: {
-              input: "$ownersData",
-              as: "owner",
-              in: {
-                _id: "$$owner._id",
-                name: "$$owner.name",
-              },
-            },
-          },
+          inventoryType: 1,
+          floor: 1,
+          flatNo: 1,
+          purchaseDate: 1,
+          "owners._id": 1,
+          "owners.name": 1,
         },
       },
     ]);
 
     return res
       .status(200)
-      .json(new ApiResponse(200, { owners }, "Owners found"));
+      .json(new ApiResponse(200, { inventoriesWithOwners }, "Owners found"));
   }
 );
