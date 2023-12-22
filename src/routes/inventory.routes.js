@@ -1,9 +1,9 @@
 import express from "express";
 import {
   addInventory,
-  showOwnersWithSpecificInventories,
   sellInventory,
   showInventories,
+  shownInventoriesWithOwners,
 } from "../controllers/inventory.controller.js";
 import validatorMiddleware from "../middlewares/validator.middleware.js";
 import inventorySchema from "../validator/inventory.validator.js";
@@ -15,6 +15,6 @@ router
   .route("/sell")
   .put(validatorMiddleware(sellInventorySchema), sellInventory);
 router.route("/all").get(showInventories);
-router.route("/show-owners").get(showOwnersWithSpecificInventories);
+router.route("/show-inventories-with-owners").get(shownInventoriesWithOwners);
 
 export default router;
