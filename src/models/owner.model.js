@@ -84,9 +84,16 @@ const ownerSchema = new mongoose.Schema(
     },
     inventories: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Inventory",
-        default: null,
+        _id: false,
+        inventory: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Inventory",
+          default: null,
+        },
+        purchaseDate: {
+          type: Date,
+          default: null,
+        },
       },
     ],
     contracts: [
