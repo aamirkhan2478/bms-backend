@@ -15,7 +15,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 export const addContract = asyncHandler(async (req, res) => {
   const {
     tenants,
-    inventories,
+    inventory,
     owners,
     signingDate,
     startDate,
@@ -39,15 +39,12 @@ export const addContract = asyncHandler(async (req, res) => {
 
   const { _id: id } = req.user;
 
-  const inventoryArray = mappingArray(inventories);
   const ownerArray = mappingArray(owners);
   const tenantArray = mappingArray(tenants);
 
   // Check inventories ObjectId is valid
-  for (const inventory of inventoryArray) {
-    if (!mongoose.Types.ObjectId.isValid(inventory)) {
-      throw new ApiError(400, "Invalid inventory id");
-    }
+  if (!mongoose.Types.ObjectId.isValid(inventory)) {
+    throw new ApiError(400, "Invalid inventory id");
   }
 
   // Check owners ObjectId is valid
@@ -79,7 +76,7 @@ export const addContract = asyncHandler(async (req, res) => {
 
   const contract = new Contract({
     tenants: tenantArray,
-    inventories: inventoryArray,
+    inventory,
     owners: ownerArray,
     signingDate,
     startDate,
@@ -108,16 +105,14 @@ export const addContract = asyncHandler(async (req, res) => {
   // Update inventory status and contracts
   const updatedInventoryStatus = "rented";
 
-  for (const inventory of inventoryArray) {
-    await Inventory.findByIdAndUpdate(
-      inventory,
-      {
-        $addToSet: { contracts: createdContract._id, tenants: tenantArray },
-        $set: { status: updatedInventoryStatus },
-      },
-      { new: true }
-    );
-  }
+  await Inventory.findByIdAndUpdate(
+    inventory,
+    {
+      $addToSet: { contracts: createdContract._id, tenants: tenantArray },
+      $set: { status: updatedInventoryStatus },
+    },
+    { new: true }
+  );
 
   // Update owner and tenant contracts
   for (const owner of ownerArray) {
@@ -136,12 +131,16 @@ export const addContract = asyncHandler(async (req, res) => {
       {
         $addToSet: {
           contracts: createdContract._id,
-          inventories: inventoryArray,
+          inventories: inventory,
         },
       },
       { new: true }
     );
   }
 
-  res.status(201).json(new ApiResponse(200, { contract: createdContract }, "Contract added"));
+  res
+    .status(201)
+    .json(
+      new ApiResponse(200, { contract: createdContract }, "Contract added")
+    );
 });
