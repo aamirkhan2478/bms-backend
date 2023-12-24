@@ -1,23 +1,10 @@
 import mongoose from "mongoose";
 
 const contractSchema = new mongoose.Schema({
-  tenants: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Tenant",
-    },
-  ],
   inventory: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Inventory",
   },
-
-  owners: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Owner",
-    },
-  ],
   signingDate: {
     type: Date,
     required: true,
