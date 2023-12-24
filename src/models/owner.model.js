@@ -82,27 +82,6 @@ const ownerSchema = new mongoose.Schema(
     remarks: {
       type: String,
     },
-    inventories: [
-      {
-        _id: false,
-        inventory: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Inventory",
-          default: null,
-        },
-        purchaseDate: {
-          type: Date,
-          default: null,
-        },
-      },
-    ],
-    contracts: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Contract",
-        default: null,
-      },
-    ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
