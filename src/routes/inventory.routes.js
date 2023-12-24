@@ -13,7 +13,7 @@ const router = express.Router();
 router.route("/add").post(validatorMiddleware(inventorySchema), addInventory);
 router
   .route("/sell")
-  .put(validatorMiddleware(sellInventorySchema), sellInventory);
+  .post( sellInventory);
 router.route("/all").get(showInventories);
 router.route("/show-inventories-with-owners").get(shownInventoriesWithOwners);
 
