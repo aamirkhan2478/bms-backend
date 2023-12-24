@@ -82,20 +82,6 @@ const tenantSchema = new mongoose.Schema(
     remarks: {
       type: String,
     },
-    inventories: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Inventory",
-        default: null,
-      },
-    ],
-    contracts: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Contract",
-        default: null,
-      },
-    ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
