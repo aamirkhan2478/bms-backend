@@ -1,8 +1,6 @@
 import Owner from "../models/owner.model.js";
 import mappingArray from "../utils/mapping_arrays.utils.js";
 import fileArray from "../utils/upload_images.utils.js";
-import mongoose from "mongoose";
-import Inventory from "../models/inventory.model.js";
 import asyncHandler from "../utils/AsyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -116,81 +114,3 @@ export const showOwners = asyncHandler(async (_, res) => {
   ]);
   return res.status(200).json(new ApiResponse(200, { owners }, "Owners found"));
 });
-
-// @route   GET /api/owner/show-inventories
-// @desc    Get all inventories with their owners
-// @access  Private
-export const showInventoriesWithSpecificOwners = asyncHandler(
-  async (req, res) => {
-    // Get the owner IDs from the query string
-    let { ownerIds } = req.query;
-
-    // Convert the comma-separated string of IDs to an array
-    ownerIds = ownerIds.split(",").map((id) => id.trim());
-
-    // Select only the owner Ids
-    const owners = await Owner.aggregate([
-      {
-        $match: {
-          _id: { $in: ownerIds.map((id) => new mongoose.Types.ObjectId(id)) },
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-        },
-      },
-    ]);
-
-    // Extract the owner IDs from the retrieved owners
-    const ids = owners.map((owner) => owner._id);
-
-    // Check if any owners were found
-    if (ids.length === 0) {
-      throw new ApiError(404, "No owners found");
-    }
-
-    // Check the ObjectIds are valid
-    if (!ids.every((id) => mongoose.Types.ObjectId.isValid(id))) {
-      throw new ApiError(400, "Invalid owner id");
-    }
-
-    // Retrieve only the inventories that belong to the specified owners
-    const inventories = await Inventory.aggregate([
-      {
-        $match: {
-          owners: { $in: ids },
-        },
-      },
-      {
-        $lookup: {
-          from: "owners",
-          localField: "owners",
-          foreignField: "_id",
-          as: "owners",
-        },
-      },
-      {
-        $project: {
-          inventoryType: 1,
-          floor: 1,
-          flatNo: 1,
-          owners: {
-            $map: {
-              input: "$owners",
-              as: "owner",
-              in: {
-                _id: "$$owner._id",
-                name: "$$owner.name",
-              },
-            },
-          },
-        },
-      },
-    ]);
-
-    return res
-      .status(200)
-      .json(new ApiResponse(200, { inventories }, "Inventories found"));
-  }
-);
