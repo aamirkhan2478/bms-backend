@@ -47,7 +47,7 @@ export const sellInventory = asyncHandler(async (req, res) => {
 // @desc    Get all inventories
 // @access  Private
 export const showInventories = asyncHandler(async (req, res) => {
-  const { search, page = 1, limit = 3 } = req.query;
+  const { search, page = 1, limit = 5 } = req.query;
 
   // Define the match object for search
   const match = {};
@@ -62,8 +62,8 @@ export const showInventories = asyncHandler(async (req, res) => {
   }
 
   // Pagination logic
-  const startIndex = (page - 1) * limit;
-  const endIndex = page * limit;
+  const startIndex = (page - 1) * parseInt(limit);
+  const endIndex = page * parseInt(limit);
 
   const inventories = await Inventory.aggregate([
     {
@@ -99,30 +99,35 @@ export const showInventories = asyncHandler(async (req, res) => {
       $skip: startIndex, // Pagination: Skip documents
     },
     {
-      $limit: limit, // Pagination: Limit documents per page
+      $limit: parseInt(limit), // Pagination: Limit documents per page
     },
   ]);
 
+  const total = await Inventory.countDocuments().exec();
   // Pagination result
   const pagination = {};
-  if (endIndex < (await Inventory.countDocuments().exec())) {
+  if (endIndex < total) {
     pagination.next = {
       page: page + 1,
-      limit: limit,
+      limit: parseInt(limit),
     };
   }
 
   if (startIndex > 0) {
     pagination.prev = {
       page: page - 1,
-      limit: limit,
+      limit: parseInt(limit),
     };
   }
 
   return res
     .status(200)
     .json(
-      new ApiResponse(200, { inventories, pagination }, "Inventories found")
+      new ApiResponse(
+        200,
+        { inventories, pagination, totalInventory: total },
+        "Inventories found"
+      )
     );
 });
 
@@ -201,14 +206,38 @@ export const shownInventoriesWithOwners = asyncHandler(async (_, res) => {
         localField: "_id", // Field from the Inventory collection
         foreignField: "inventoryId", // Field from the OwnerInventory collection
         as: "ownerInventory",
-      },
-    },
-    {
-      $lookup: {
-        from: "owners", // Name of the Owner collection
-        localField: "ownerInventory.ownerId", // Field from the OwnerInventory collection
-        foreignField: "_id", // Field from the Owner collection
-        as: "owners",
+        pipeline: [
+          {
+            $lookup: {
+              from: "owners", // Name of the Owner collection
+              localField: "ownerId", // Field from the OwnerInventory collection
+              foreignField: "_id", // Field from the Owner collection
+              as: "owners",
+            },
+          },
+          {
+            $unwind: "$owners",
+          },
+          {
+            $addFields: {
+              ownerId: "$owners._id",
+              ownerName: "$owners.name",
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              ownerId: 1,
+              ownerName: 1,
+              isActive: 1,
+            },
+          },
+          {
+            $match: {
+              isActive: true,
+            },
+          },
+        ],
       },
     },
     {
@@ -217,13 +246,13 @@ export const shownInventoriesWithOwners = asyncHandler(async (_, res) => {
         inventoryType: 1,
         floor: 1,
         flatNo: 1,
-        status: 1,
-        createdBy: 1,
-        owners: {
-          _id: 1,
-          name: 1,
-        },
-        createdAt: 1,
+        "ownerInventory.ownerId": 1,
+        "ownerInventory.ownerName": 1,
+      },
+    },
+    {
+      $match: {
+        ownerInventory: { $ne: [] },
       },
     },
   ]);
