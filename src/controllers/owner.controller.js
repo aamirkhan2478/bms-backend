@@ -3,7 +3,7 @@ import mappingArray from "../utils/mapping_arrays.utils.js";
 import fileArray from "../utils/upload_images.utils.js";
 import asyncHandler from "../utils/AsyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { ApiError } from "../utils/ApiError.js";
+// import { ApiError } from "../utils/ApiError.js";
 
 // @route   POST /api/owner/add
 // @desc    Add new owner
@@ -41,13 +41,13 @@ export const addOwner = asyncHandler(async (req, res) => {
   // Check if email already exists
   const emailExist = await Owner.findOne({ email });
   if (emailExist) {
-    throw new ApiError(400, "Email already exists");
+    res.status(400).json(new ApiResponse(400, {}, "Email already exists"));
   }
 
   // Check if CNIC already exists
   const cnicExist = await Owner.findOne({ cnic });
   if (cnicExist) {
-    throw new ApiError(400, "CNIC already exists");
+    res.status(400).json(new ApiResponse(400, {}, "CNIC already exists"));
   }
 
   const owner = new Owner({
