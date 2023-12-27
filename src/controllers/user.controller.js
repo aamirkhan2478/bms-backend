@@ -14,7 +14,7 @@ export const register = asyncHandler(async (req, res) => {
   // Check if user exists
   const emailExist = await User.findOne({ email });
   if (emailExist) {
-    throw new ApiError(400, "Email already exists");
+    res.status(400).json(new ApiResponse(400, {}, "Email already exists"));
   }
 
   // Create new user
@@ -35,7 +35,7 @@ export const login = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
 
   if (!user) {
-    throw new ApiError(400, "Invalid credentials");
+    res.status(400).json(new ApiResponse(400, {}, "Invalid credentials"));
   }
 
   // Check if password matches
@@ -111,7 +111,7 @@ export const tokenRefresh = asyncHandler(async (req, res) => {
   // Get the refresh token from the request cookies
   const { refreshToken } = req.cookies;
   if (!refreshToken) {
-    throw new ApiError(401, "No refresh token provided");
+    res.status(401).json(new ApiResponse(401, {}, "No refresh token provided"));
   }
 
   // Verify the refresh token
@@ -122,7 +122,7 @@ export const tokenRefresh = asyncHandler(async (req, res) => {
 
   // If no user is found
   if (!user) {
-    throw new ApiError(404, "Invalid refresh token");
+    res.status(404).json(new ApiResponse(404, {}, "Invalid refresh token"));
   }
 
   // Generate new tokens
@@ -157,7 +157,7 @@ export const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(id).select("-password -refreshToken");
 
   if (!user) {
-    throw new ApiError(404, "User not found");
+    res.status(404).json(new ApiResponse(404, {}, "User not found"));
   }
 
   // Update the user
@@ -184,13 +184,13 @@ export const changePassword = asyncHandler(async (req, res) => {
   const user = await User.findById(id);
 
   if (!user) {
-    throw new ApiError(404, "User not found");
+    res.status(404).json(new ApiResponse(404, {}, "User not found"));
   }
 
   // Check if current password matches
   const isMatch = await user.matchPassword(currentPassword);
   if (!isMatch) {
-    throw new ApiError(400, "Invalid credentials");
+    res.status(400).json(new ApiResponse(400, {}, "Invalid credentials"));
   }
 
   // Update the password
@@ -222,7 +222,7 @@ export const getUserById = asyncHandler(async (req, res) => {
   // Check if user exists
   const user = await User.findById(id).select("-password -refreshToken");
   if (!user) {
-    throw new ApiError(404, "User not found");
+    res.status(404).json(new ApiResponse(404, {}, "User not found"));
   }
 
   return res.status(200).json(new ApiResponse(200, { user }, "User found"));
@@ -239,7 +239,7 @@ export const deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findById(id);
 
   if (!user) {
-    throw new ApiError(404, "User not found");
+    res.status(404).json(new ApiResponse(404, {}, "User not found"));
   }
 
   await user.deleteOne();
