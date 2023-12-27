@@ -9,7 +9,7 @@ const validatorMiddleware = (schema) =>
       next();
     } catch (err) {
       const message = err.errors[0].message;
-      throw new ApiError(400, message);
+      res.status(400).json(new ApiResponse(400, {}, message));
     }
   });
 
