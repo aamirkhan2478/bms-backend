@@ -1,11 +1,10 @@
 import mongoose from "mongoose";
 import Contract from "../models/contract.model.js";
-import Inventory from "../models/inventory.model.js";
 import mappingArray from "../utils/mapping_arrays.utils.js";
 import fileArray from "../utils/upload_images.utils.js";
 import asyncHandler from "../utils/AsyncHandler.js";
-import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+// import { ApiError } from "../utils/ApiError.js";
 import OwnerSignContract from "../models/owner_sign_contract.model.js";
 import TenantSignContract from "../models/tenant_sign_contract.model.js";
 import RentalInventory from "../models/rental_inventory.model.js";
@@ -44,26 +43,26 @@ export const addContract = asyncHandler(async (req, res) => {
   const tenantArray = mappingArray(tenants);
   // Check inventory ObjectId is valid
   if (!mongoose.Types.ObjectId.isValid(inventory)) {
-    throw new ApiError(400, "Invalid inventory id");
+    res.status(400).json(new ApiResponse(400, {}, "Invalid inventory id"));
   }
 
   // Check owners ObjectId is valid
   for (let owner of ownerArray) {
     if (!mongoose.Types.ObjectId.isValid(owner)) {
-      throw new ApiError(400, "Invalid owner id");
+      res.status(400).json(new ApiResponse(400, {}, "Invalid owner id"));
     }
   }
 
   // Check tenants ObjectId is valid
   for (let tenant of tenantArray) {
     if (!mongoose.Types.ObjectId.isValid(tenant)) {
-      throw new ApiError(400, "Invalid tenant id");
+      res.status(400).json(new ApiResponse(400, {}, "Invalid tenant id"));
     }
   }
 
   // Check agent ObjectId is valid
   if (!mongoose.Types.ObjectId.isValid(agent)) {
-    throw new ApiError(400, "Invalid agent id");
+    res.status(400).json(new ApiResponse(400, {}, "Invalid agent id"));
   }
 
   // Upload images
@@ -99,17 +98,6 @@ export const addContract = asyncHandler(async (req, res) => {
   });
 
   const createdContract = await contract.save();
-
-  // Update inventory status and contracts
-  const updatedInventoryStatus = "rented";
-
-  await Inventory.findByIdAndUpdate(
-    inventory,
-    {
-      $set: { status: updatedInventoryStatus },
-    },
-    { new: true }
-  );
 
   // Save signed contract to owners and tenants
   await OwnerSignContract.insertMany(
