@@ -1,5 +1,5 @@
 import Tenant from "../models/tenant.model.js";
-import { ApiError } from "../utils/ApiError.js";
+// import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/AsyncHandler.js";
 import mappingArray from "../utils/mapping_arrays.utils.js";
@@ -41,13 +41,13 @@ export const addTenant = asyncHandler(async (req, res) => {
   // Check if email already exists
   const emailExist = await Tenant.findOne({ email });
   if (emailExist) {
-    throw new ApiError(400, "Email already exists");
+    res.status(400).json(new ApiResponse(400, {}, "Email already exists"));
   }
 
   // Check if CNIC already exists
   const cnicExist = await Tenant.findOne({ cnic });
   if (cnicExist) {
-    throw new ApiError(400, "CNIC already exists");
+    res.status(400).json(new ApiResponse(400, {}, "CNIC already exists"));
   }
 
   const tenant = new Tenant({
