@@ -24,18 +24,17 @@ const fileArray = async (files, basePath) => {
       // Store the link in the result array
       result.push(compressedImagePath);
 
-      // Delete the first image after compression
-      if (i === 0) {
-        // Delete the original image file
-        fs.unlinkSync(file.path);
-      }
-
       // Save the compressed image to the server
       const compressedImagePaths = `public/uploads/${compressedFilename}`;
       fs.writeFileSync(
         path.resolve(compressedImagePaths),
         compressedImageBuffer
       );
+    }
+
+    // Delete all original images after compression
+    for (let i = 0; i < files.length; i++) {
+      fs.unlinkSync(files[i].path);
     }
   }
 
