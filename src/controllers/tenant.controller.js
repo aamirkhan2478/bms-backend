@@ -38,12 +38,6 @@ export const addTenant = asyncHandler(async (req, res) => {
 
   const imagesArray = await fileArray(files, basePath);
 
-  // Check if email already exists
-  const emailExist = await Tenant.findOne({ email });
-  if (emailExist) {
-    res.status(400).json(new ApiResponse(400, {}, "Email already exists"));
-  }
-
   // Check if CNIC already exists
   const cnicExist = await Tenant.findOne({ cnic });
   if (cnicExist) {
