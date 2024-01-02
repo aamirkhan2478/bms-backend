@@ -42,10 +42,12 @@ const ownerTenantSchema = z.object({
   phoneNumber: z.array(z.string()).optional(),
   emergencyNumber: z.array(z.string()).optional(),
   whatsapp: z.array(z.string()).optional(),
-  email: z.string().email({
-    required_error: "Email is required!",
-    message: "Invalid email address!",
-  }),
+  email: z
+    .string()
+    .email({
+      message: "Invalid email address!",
+    })
+    .optional(),
   currentAddress: z.string({ required_error: "Current address is required!" }),
   permanentAddress: z.string({
     required_error: "Permanent address is required!",
