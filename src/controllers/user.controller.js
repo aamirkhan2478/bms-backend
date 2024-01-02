@@ -118,7 +118,9 @@ export const tokenRefresh = asyncHandler(async (req, res) => {
   const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 
   // Find the user by the decoded token id
-  const user = await User.findById(decoded.id);
+  const user = await User.findById(decoded.id).select(
+    "-password -refreshToken"
+  );
 
   // If no user is found
   if (!user) {
@@ -140,10 +142,10 @@ export const tokenRefresh = asyncHandler(async (req, res) => {
     .status(200)
     .cookie("token", accessToken, options)
     .cookie("refreshToken", newRefreshToken, options)
-    .json(new ApiResponse(200, {}, "Token refreshed successfully"));
+    .json(new ApiResponse(200, { user }, "Token refreshed successfully"));
 });
 
-// @route   PUT /api/user/:id/update
+// @route   PATCH /api/user/:id/update
 // @desc    Update user
 // @access  Private
 export const updateUser = asyncHandler(async (req, res) => {
@@ -170,7 +172,7 @@ export const updateUser = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, { user }, "User updated"));
 });
 
-// @route   PUT /api/user/change-password
+// @route   PATCH /api/user/change-password
 // @desc    Change password
 // @access  Private
 export const changePassword = asyncHandler(async (req, res) => {
