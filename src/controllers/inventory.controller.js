@@ -103,7 +103,7 @@ export const showInventories = asyncHandler(async (req, res) => {
     },
   ]);
 
-  const total = await Inventory.countDocuments().exec();
+  const total = await Inventory.find(match).count();
   // Pagination result
   const pagination = {};
   if (endIndex < total) {
@@ -147,7 +147,7 @@ export const showInventory = asyncHandler(async (req, res) => {
         from: "sellinventories",
         localField: "_id",
         foreignField: "inventoryId",
-        as: "sellInventory",
+        as: "owners",
         pipeline: [
           {
             $lookup: {
@@ -173,6 +173,11 @@ export const showInventory = asyncHandler(async (req, res) => {
               isActive: 1,
             },
           },
+          {
+            $match: {
+              isActive: true,
+            },
+          },
         ],
       },
     },
@@ -182,11 +187,11 @@ export const showInventory = asyncHandler(async (req, res) => {
         floor: 1,
         flatNo: 1,
         status: 1,
-        "sellInventory._id": 1,
-        "sellInventory.purchaseDate": 1,
-        "sellInventory.ownerName": 1,
-        "sellInventory.ownerName": 1,
-        "sellInventory.isActive": 1,
+        "owners._id": 1,
+        "owners.purchaseDate": 1,
+        "owners.ownerName": 1,
+        "owners.ownerName": 1,
+        "owners.isActive": 1,
       },
     },
   ]);
