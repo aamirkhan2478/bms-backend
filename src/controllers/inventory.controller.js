@@ -266,3 +266,17 @@ export const shownInventoriesWithOwners = asyncHandler(async (_, res) => {
     .status(200)
     .json(new ApiResponse(200, { inventoriesWithOwners }, "Owners found"));
 });
+
+// @route   GET /api/inventory/:id/update
+// @desc    Update inventory
+// @access  Private
+export const updateInventory = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { inventoryType, floor, flatNo } = req.body;
+  await Inventory.findByIdAndUpdate(
+    id,
+    { inventoryType, floor, flatNo },
+    { new: true }
+  );
+  return res.status(200).json(new ApiResponse(200, {}, "Inventory updated"));
+});
