@@ -12,12 +12,16 @@ const rentalInventorySchema = new mongoose.Schema(
       ref: "Tenant",
       required: true,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
 
 const RentalInventory = mongoose.model(
-  "TenantInventory",
+  "RentalInventory",
   rentalInventorySchema
 );
 
