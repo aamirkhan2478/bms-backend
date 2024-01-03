@@ -269,9 +269,7 @@ export const updateImages = asyncHandler(async (req, res) => {
   owner.images = imagesArray;
   await owner.save();
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, { owner }, "Owner images updated"));
+  return res.status(200).json(new ApiResponse(200, {}, "Owner images updated"));
 });
 
 // @route   PATCH /api/owner/:id/update
@@ -333,7 +331,5 @@ export const updateOwner = asyncHandler(async (req, res) => {
 
   await owner.save();
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, { owner }, "Owner updated"));
+  return res.status(200).json(new ApiResponse(200, {}, "Owner updated"));
 });
