@@ -333,3 +333,31 @@ export const updateOwner = asyncHandler(async (req, res) => {
 
   return res.status(200).json(new ApiResponse(200, {}, "Owner updated"));
 });
+
+// @route   GET /api/owner/expired-cnic
+// @desc    Get expired CNIC
+// @access  Private
+export const expiredCnic = asyncHandler(async (_, res) => {
+  const cnicExpiryCount = await Owner.aggregate([
+    {
+      $match: {
+        cnicExpiry: {
+          $lte: new Date(),
+        },
+      },
+    },
+    {
+      $count: "expiredCnicCount",
+    },
+  ]);
+
+  const expiredCnicCount = cnicExpiryCount[0]
+    ? cnicExpiryCount[0].expiredCnicCount
+    : 0;
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      expiredCnicCount,
+    })
+  );
+});
