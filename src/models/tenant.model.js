@@ -39,6 +39,7 @@ const tenantSchema = new mongoose.Schema(
     ],
     email: {
       type: String,
+      default: null,
     },
     currentAddress: {
       type: String,
