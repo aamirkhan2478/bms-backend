@@ -330,3 +330,31 @@ export const updateImages = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, {}, "Tenant images updated"));
 });
+
+// @route   GET /api/tenant/expired-cnic
+// @desc    Get expired CNIC
+// @access  Private
+export const expiredCnic = asyncHandler(async (_, res) => {
+  const cnicExpiryCount = await Tenant.aggregate([
+    {
+      $match: {
+        cnicExpiry: {
+          $lte: new Date(),
+        },
+      },
+    },
+    {
+      $count: "expiredCnicCount",
+    },
+  ]);
+
+  const expiredCnicCount = cnicExpiryCount[0]
+    ? cnicExpiryCount[0].expiredCnicCount
+    : 0;
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      expiredCnicCount,
+    })
+  );
+});
