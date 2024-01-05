@@ -28,6 +28,30 @@ export const addInventory = asyncHandler(async (req, res) => {
 export const sellInventory = asyncHandler(async (req, res) => {
   const { ownerId, inventoryId, purchaseDate } = req.body;
 
+  const owner = await SellInventory.findOne({
+    ownerId,
+    inventoryId,
+  });
+
+  if (owner && owner.isActive === true) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "Inventory already sold to this owner"));
+  }
+
+  if (owner && owner.isActive === false) {
+    await SellInventory.findOneAndUpdate(
+      { ownerId, inventoryId },
+      { isActive: true }
+    );
+
+    await Inventory.findByIdAndUpdate(inventoryId, { status: "sold" });
+
+    return res
+      .status(201)
+      .json(new ApiResponse(200, {}, "Inventory sold to owner again"));
+  }
+
   const sellInventory = new SellInventory({
     ownerId,
     inventoryId,
@@ -38,9 +62,7 @@ export const sellInventory = asyncHandler(async (req, res) => {
 
   await Inventory.findByIdAndUpdate(inventoryId, { status: "sold" });
 
-  return res
-    .status(201)
-    .json(new ApiResponse(200, { sellInventory }, "Inventory sold"));
+  return res.status(201).json(new ApiResponse(200, {}, "Inventory sold"));
 });
 
 // @route   GET /api/inventory/all
@@ -279,4 +301,149 @@ export const updateInventory = asyncHandler(async (req, res) => {
     { new: true }
   );
   return res.status(200).json(new ApiResponse(200, {}, "Inventory updated"));
+});
+
+// @route   GET /api/inventory/open-for-sale
+// @desc    Get how many inventories that are open for sale
+// @access  Private
+export const inventoryOpenForSell = asyncHandler(async (_, res) => {
+  const inventoriesForSell = await Inventory.aggregate([
+    {
+      $match: {
+        status: "for sell",
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalInventories: {
+          $sum: 1,
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        totalInventories: 1,
+      },
+    },
+  ]);
+
+  const totalInventories = inventoriesForSell[0]
+    ? inventoriesForSell[0].totalInventories
+    : 0;
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { totalInventories }, "Inventories found"));
+});
+
+// @route   GET /api/inventory/vacant-inventories
+// @desc    Get vacant inventories
+// @access  Private
+export const vacantInventories = asyncHandler(async (_, res) => {
+  const vacantFlatInventories = await Inventory.aggregate([
+    {
+      $match: {
+        $and: [
+          {
+            inventoryType: "Flat",
+          },
+          {
+            status: "vacant",
+          },
+        ],
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalFlatInventories: {
+          $sum: 1,
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        totalFlatInventories: 1,
+      },
+    },
+  ]);
+
+  const vacantShopInventories = await Inventory.aggregate([
+    {
+      $match: {
+        $and: [
+          {
+            inventoryType: "Shop",
+          },
+          {
+            status: "vacant",
+          },
+        ],
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalShopInventories: {
+          $sum: 1,
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        totalShopInventories: 1,
+      },
+    },
+  ]);
+
+  const vacantOfficeInventories = await Inventory.aggregate([
+    {
+      $match: {
+        $and: [
+          {
+            inventoryType: "Office",
+          },
+          {
+            status: "vacant",
+          },
+        ],
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalOfficeInventories: {
+          $sum: 1,
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        totalOfficeInventories: 1,
+      },
+    },
+  ]);
+
+  const vacantOfficeInventoriesCount = vacantOfficeInventories[0]
+    ? vacantOfficeInventories[0].totalOfficeInventories
+    : 0;
+  const vacantShopInventoriesCount = vacantShopInventories[0]
+    ? vacantShopInventories[0].totalShopInventories
+    : 0;
+  const vacantFlatInventoriesCount = vacantFlatInventories[0]
+    ? vacantFlatInventories[0].totalFlatInventories
+    : 0;
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      vacantOfficeInventoriesCount,
+      vacantShopInventoriesCount,
+      vacantFlatInventoriesCount,
+    })
+  );
 });
