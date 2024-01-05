@@ -6,6 +6,7 @@ import {
   showOwner,
   updateImages,
   updateOwner,
+  expiredCnic
 } from "../controllers/owner.controller.js";
 import ownerTenantSchema from "../validator/owner_tenant.validator.js";
 import validatorMiddleware from "../middlewares/validator.middleware.js";
@@ -19,7 +20,7 @@ router
     addOwner
   );
 router.route("/all").get(showOwners);
-router.route("/:id").get(showOwner);
+router.route("/:id/show").get(showOwner);
 router
   .route("/:id/update-images")
   .patch(upload.array("images", 10), updateImages);
@@ -27,4 +28,5 @@ router
   .route("/:id/update")
   .patch(validatorMiddleware(ownerTenantSchema), updateOwner);
 
+  router.route("/expired-cnic").get(expiredCnic);
 export default router;
