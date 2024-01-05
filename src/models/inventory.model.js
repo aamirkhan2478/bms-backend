@@ -16,7 +16,7 @@ const inventorySchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["for sell", "sold"],
+      enum: ["for sell", "sold", "vacant"],
       default: "for sell",
     },
     createdBy: {
