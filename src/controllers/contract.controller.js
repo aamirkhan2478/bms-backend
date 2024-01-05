@@ -41,6 +41,7 @@ export const addContract = asyncHandler(async (req, res) => {
 
   const ownerArray = mappingArray(owners);
   const tenantArray = mappingArray(tenants);
+
   // Check inventory ObjectId is valid
   if (!mongoose.Types.ObjectId.isValid(inventory)) {
     res.status(400).json(new ApiResponse(400, {}, "Invalid inventory id"));
@@ -123,4 +124,53 @@ export const addContract = asyncHandler(async (req, res) => {
   );
 
   res.status(201).json(new ApiResponse(200, {}, "Contract added"));
+});
+
+export const showContracts = asyncHandler(async (req, res) => {});
+export const showContract = asyncHandler(async (req, res) => {});
+
+// @route   GET /api/contract/expired-contract
+// @desc    Expired contract
+// @access  Private
+export const expireContract = asyncHandler(async (_, res) => {
+  const expiredContracts = await Contract.aggregate([
+    {
+      $match: {
+        endDate: {
+          $lte: new Date(),
+        },
+      },
+    },
+    {
+      $count: "expiredContracts",
+    },
+  ]);
+
+  const expiringContracts = await Contract.aggregate([
+    {
+      $match: {
+        // only show if contracts that will expire in 30 days
+        endDate: { 
+          $gte: new Date(new Date().setDate(new Date().getDate() + 30)),
+        },
+      },
+    },
+    {
+      $count: "expiringContracts",
+    },
+  ]);
+
+  const expiredContractsCount = expiredContracts[0]
+    ? expiredContracts[0].expiredContracts
+    : 0;
+
+  const expiringContractsCount = expiringContracts[0]
+    ? expiringContracts[0].expiringContracts
+    : 0;
+  return res.status(200).json(
+    new ApiResponse(200, {
+      expiringContractsCount,
+      expiredContractsCount,
+    })
+  );
 });
