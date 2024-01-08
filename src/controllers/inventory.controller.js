@@ -78,7 +78,6 @@ export const showInventories = asyncHandler(async (req, res) => {
       { inventoryType: { $regex: search, $options: "i" } },
       { floor: { $regex: search, $options: "i" } },
       { flatNo: { $regex: search, $options: "i" } },
-      { status: { $regex: search, $options: "i" } },
       { createdBy: { $regex: search, $options: "i" } },
     ];
   }
@@ -446,4 +445,165 @@ export const vacantInventories = asyncHandler(async (_, res) => {
       vacantFlatInventoriesCount,
     })
   );
+});
+
+// @route   GET /api/inventory/sold-inventories/all
+// @desc    Get all sold inventories
+// @access  Private
+export const soldInventories = asyncHandler(async (req, res) => {
+  const { search, page = 1, limit = 5 } = req.query;
+
+  // Define the match object for search
+  const match = {};
+  if (search) {
+    match.$or = [
+      { inventoryType: { $regex: search, $options: "i" } },
+      { floor: { $regex: search, $options: "i" } },
+      { flatNo: { $regex: search, $options: "i" } },
+      { createdBy: { $regex: search, $options: "i" } },
+      { "ownerInventory.ownerName": { $regex: search, $options: "i" } },
+    ];
+  }
+
+  // Pagination logic
+  const startIndex = (page - 1) * parseInt(limit);
+  const endIndex = page * parseInt(limit);
+  const showSoldInventories = await Inventory.aggregate([
+    {
+      $match: {
+        status: "sold",
+      },
+    },
+    {
+      $lookup: {
+        from: "sellinventories", // Name of the OwnerInventory collection
+        localField: "_id", // Field from the Inventory collection
+        foreignField: "inventoryId", // Field from the OwnerInventory collection
+        as: "ownerInventory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "owners", // Name of the Owner collection
+              localField: "ownerId", // Field from the OwnerInventory collection
+              foreignField: "_id", // Field from the Owner collection
+              as: "owners",
+            },
+          },
+          {
+            $unwind: "$owners",
+          },
+          {
+            $addFields: {
+              ownerId: "$owners._id",
+              ownerName: "$owners.name",
+              purchaseDate: "$purchaseDate",
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              ownerId: 1,
+              ownerName: 1,
+              isActive: 1,
+              purchaseDate: 1,
+            },
+          },
+          {
+            $match: {
+              isActive: true,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "createdBy",
+        foreignField: "_id",
+        as: "createdBy",
+      },
+    },
+    {
+      $unwind: "$createdBy",
+    },
+    {
+      $addFields: {
+        createdBy: "$createdBy.name",
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        inventoryType: 1,
+        floor: 1,
+        flatNo: 1,
+        createdBy: 1,
+        "ownerInventory.ownerId": 1,
+        "ownerInventory.ownerName": 1,
+        "ownerInventory.purchaseDate": 1,
+      },
+    },
+    {
+      $match: {
+        ownerInventory: { $ne: [] },
+      },
+    },
+    {
+      $match: match, // Add the match object for search
+    },
+    {
+      $skip: startIndex, // Pagination: Skip documents
+    },
+    {
+      $limit: parseInt(limit), // Pagination: Limit documents per page
+    },
+  ]);
+
+  const total = await Inventory.find({
+    $and: [
+      {
+        status: "sold",
+      },
+      match,
+    ],
+  }).count();
+  
+  // Pagination result
+  const pagination = {};
+  if (endIndex < total) {
+    pagination.next = {
+      page: page + 1,
+      limit: parseInt(limit),
+    };
+  }
+
+  if (startIndex > 0) {
+    pagination.prev = {
+      page: page - 1,
+      limit: parseInt(limit),
+    };
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { showSoldInventories, pagination, totalSoldInventory: total },
+        "Inventories found"
+      )
+    );
+});
+
+// @route   PATCH /api/inventory/update-status/:id
+// @desc    Update inventory status
+// @access  Private
+export const updateStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  await Inventory.findByIdAndUpdate(id, { status }, { new: true });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Inventory status updated"));
 });
