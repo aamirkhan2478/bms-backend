@@ -8,6 +8,8 @@ import {
   updateInventory,
   inventoryOpenForSell,
   vacantInventories,
+  soldInventories,
+  updateStatus,
 } from "../controllers/inventory.controller.js";
 import validatorMiddleware from "../middlewares/validator.middleware.js";
 import inventorySchema from "../validator/inventory.validator.js";
@@ -26,4 +28,6 @@ router
   .patch(validatorMiddleware(inventorySchema), updateInventory);
 router.route("/open-for-sell").get(inventoryOpenForSell);
 router.route("/vacant-inventories").get(vacantInventories);
+router.route("/sold-inventories/all").get(soldInventories);
+router.route("/update-status/:id").patch(updateStatus);
 export default router;
