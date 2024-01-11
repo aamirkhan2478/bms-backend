@@ -4,7 +4,9 @@ import {
   addContract,
   showContracts,
   showContract,
-  expireContract,
+  contractDashboardCounts,
+  updateContract,
+  updateImages,
 } from "../controllers/contract.controller.js";
 import validatorMiddleware from "../middlewares/validator.middleware.js";
 import upload from "../middlewares/multer.middleware.js";
@@ -19,6 +21,12 @@ router
   );
 router.route("/all").get(showContracts);
 router.route("/:id/show").get(showContract);
-router.route("/expire-contract").get(expireContract);
+router.route("/contract-dashboard-counts").get(contractDashboardCounts);
+router
+  .route("/:id/update")
+  .put(validatorMiddleware(contractSchema), updateContract);
+router
+  .route("/:id/update-images")
+  .patch(upload.array("images", 10), updateImages);
 
 export default router;
