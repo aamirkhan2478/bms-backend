@@ -59,6 +59,7 @@ export const login = asyncHandler(async (req, res) => {
     expires: new Date(Date.now() + 86400000), // 24 hours
     httpOnly: true,
     secure: process.env.SECURE || false, // set to true if your using https
+    sameSite: "none",
   };
 
   return res
@@ -95,6 +96,7 @@ export const userLogout = asyncHandler(async (req, res) => {
     expires: new Date(Date.now() + 1000),
     httpOnly: true,
     secure: process.env.SECURE || false, // set to true if your using https
+    sameSite: "none",
   };
 
   return res
@@ -136,6 +138,7 @@ export const tokenRefresh = asyncHandler(async (req, res) => {
     expires: new Date(Date.now() + 86400000), // 24 hours
     httpOnly: true,
     secure: process.env.SECURE || false, // set to true if your using https
+    sameSite: "none",
   };
 
   return res
