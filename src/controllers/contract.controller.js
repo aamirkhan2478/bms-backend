@@ -340,7 +340,7 @@ export const showContracts = asyncHandler(async (req, res) => {
 
   const result = {
     contracts: contracts[0].data,
-    totalContracts: contracts[0].count[0].total,
+    totalContracts: contracts[0].count[0] ? contracts[0].count[0].total : 0,
   };
   return res.status(200).json(new ApiResponse(200, result));
 });
@@ -509,191 +509,288 @@ export const showContract = asyncHandler(async (req, res) => {
 // @route   GET /api/contract/contract-dashboard-counts
 // @desc    Expired contract
 // @access  Private
-export const contractDashboardCounts = asyncHandler(async (_, res) => {
-  const [expiredContracts, expiringContracts, uploadedContracts] =
-    await Promise.all([
-      // Aggregation for expired contracts
-      Contract.aggregate([
-        {
-          $match: {
-            endDate: {
-              $lte: new Date(),
-            },
-          },
+export const contractDashboardCounts = asyncHandler(async (req, res) => {
+  const { search, limit = 5, page = 1 } = req.query;
+  const match = {};
+  if (search) {
+    match.$or = [
+      {
+        "inventory.inventoryType": {
+          $regex: search,
+          $options: "i",
         },
-        {
-          $lookup: {
-            from: "inventories",
-            localField: "inventory",
-            foreignField: "_id",
-            as: "inventory",
-          },
+      },
+      {
+        "inventory.floor": {
+          $regex: search,
+          $options: "i",
         },
-        {
-          $addFields: {
-            inventory: {
-              $arrayElemAt: ["$inventory", 0],
-            },
-          },
+      },
+      {
+        "inventory.flatNo": {
+          $regex: search,
+          $options: "i",
         },
-        {
-          $project: {
-            _id: 1,
-            inventory: {
-              _id: 1,
-              inventoryType: 1,
-              floor: 1,
-              flatNo: 1,
-            },
-            startDate: 1,
-            endDate: 1,
-          },
-        },
-        {
-          $facet: {
-            data: [
-              {
-                $project: {
-                  _id: 1,
-                  inventory: {
-                    _id: 1,
-                    inventoryType: 1,
-                    floor: 1,
-                    flatNo: 1,
-                  },
-                  startDate: 1,
-                  endDate: 1,
-                },
-              },
-            ],
-            count: [{ $count: "total" }],
-          },
-        },
-      ]),
-      // Aggregation for expiring contracts
-      Contract.aggregate([
-        {
-          $match: {
-            endDate: {
-              $gte: new Date(),
-              $lte: new Date(new Date().setDate(new Date().getDate() + 30)),
-            },
-          },
-        },
-        {
-          $lookup: {
-            from: "inventories",
-            localField: "inventory",
-            foreignField: "_id",
-            as: "inventory",
-          },
-        },
-        {
-          $addFields: {
-            inventory: {
-              $arrayElemAt: ["$inventory", 0],
-            },
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            inventory: {
-              _id: 1,
-              inventoryType: 1,
-              floor: 1,
-              flatNo: 1,
-            },
-            startDate: 1,
-            endDate: 1,
-          },
-        },
-        {
-          $facet: {
-            data: [
-              {
-                $project: {
-                  _id: 1,
-                  inventory: {
-                    _id: 1,
-                    inventoryType: 1,
-                    floor: 1,
-                    flatNo: 1,
-                  },
-                  startDate: 1,
-                  endDate: 1,
-                },
-              },
-            ],
-            count: [{ $count: "total" }],
-          },
-        },
-      ]),
+      },
+    ];
+  }
 
-      Contract.aggregate([
-        {
-          $match: {
-            images: {
-              $ne: [],
-            },
-          },
-        },
-        {
-          $lookup: {
-            from: "inventories",
-            localField: "inventory",
-            foreignField: "_id",
-            as: "inventory",
-          },
-        },
-        {
-          $addFields: {
-            inventory: {
-              $arrayElemAt: ["$inventory", 0],
-            },
-          },
-        },
-        {
-          $facet: {
-            data: [
-              {
-                $project: {
-                  _id: 1,
-                  inventory: {
-                    _id: 1,
-                    inventoryType: 1,
-                    floor: 1,
-                    flatNo: 1,
-                  },
-                  startDate: 1,
-                  endDate: 1,
-                },
+  // Pagination logic
+  const startIndex = (parseInt(page) - 1) * parseInt(limit);
+  const contractData = await Contract.aggregate([
+    {
+      $facet: {
+        expiredContracts: [
+          {
+            $match: {
+              endDate: {
+                $lte: new Date(),
               },
-            ],
-            count: [{ $count: "total" }],
+            },
           },
-        },
-      ]),
-    ]);
+          {
+            $lookup: {
+              from: "inventories",
+              localField: "inventory",
+              foreignField: "_id",
+              as: "inventory",
+            },
+          },
+          {
+            $addFields: {
+              inventory: {
+                $arrayElemAt: ["$inventory", 0],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              inventory: {
+                _id: 1,
+                inventoryType: 1,
+                floor: 1,
+                flatNo: 1,
+              },
+              startDate: 1,
+              endDate: 1,
+            },
+          },
+          {
+            $match: match,
+          },
+          {
+            $skip: startIndex, // Pagination: Skip documents
+          },
+          {
+            $limit: parseInt(limit), // Pagination: Limit documents per page
+          },
+        ],
+        expiredContractsCount: [
+          {
+            $match: {
+              endDate: {
+                $lte: new Date(),
+              },
+            },
+          },
+          {
+            $match: match,
+          },
+          {
+            $count: "total",
+          },
+        ],
+        expiringContracts: [
+          {
+            $match: {
+              endDate: {
+                $gte: new Date(),
+                $lte: new Date(new Date().setDate(new Date().getDate() + 30)),
+              },
+            },
+          },
+          {
+            $lookup: {
+              from: "inventories",
+              localField: "inventory",
+              foreignField: "_id",
+              as: "inventory",
+            },
+          },
+          {
+            $addFields: {
+              inventory: {
+                $arrayElemAt: ["$inventory", 0],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              inventory: {
+                _id: 1,
+                inventoryType: 1,
+                floor: 1,
+                flatNo: 1,
+              },
+              startDate: 1,
+              endDate: 1,
+            },
+          },
+          {
+            $match: match,
+          },
+          {
+            $skip: startIndex, // Pagination: Skip documents
+          },
+          {
+            $limit: parseInt(limit), // Pagination: Limit documents per page
+          },
+        ],
+        expiringContractsCount: [
+          {
+            $match: {
+              endDate: {
+                $gte: new Date(),
+                $lte: new Date(new Date().setDate(new Date().getDate() + 30)),
+              },
+            },
+          },
+          {
+            $match: match,
+          },
+          {
+            $count: "total",
+          },
+        ],
+        uploadedContracts: [
+          {
+            $match: {
+              images: {
+                $ne: [],
+              },
+            },
+          },
+          {
+            $lookup: {
+              from: "inventories",
+              localField: "inventory",
+              foreignField: "_id",
+              as: "inventory",
+            },
+          },
+          {
+            $addFields: {
+              inventory: {
+                $arrayElemAt: ["$inventory", 0],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              inventory: {
+                _id: 1,
+                inventoryType: 1,
+                floor: 1,
+                flatNo: 1,
+              },
+              startDate: 1,
+              endDate: 1,
+            },
+          },
+          {
+            $match: match,
+          },
+          {
+            $skip: startIndex, // Pagination: Skip documents
+          },
+          {
+            $limit: parseInt(limit), // Pagination: Limit documents per page
+          },
+        ],
+        uploadedContractsCount: [
+          {
+            $match: {
+              images: {
+                $ne: [],
+              },
+            },
+          },
+          {
+            $match: match,
+          },
+          {
+            $count: "total",
+          },
+        ],
+        expiredAllContractsCount: [
+          {
+            $match: {
+              endDate: {
+                $lte: new Date(),
+              },
+            },
+          },
+          {
+            $count: "total",
+          },
+        ],
+        expiringAllContractsCount: [
+          {
+            $match: {
+              endDate: {
+                $gte: new Date(),
+                $lte: new Date(new Date().setDate(new Date().getDate() + 30)),
+              },
+            },
+          },
+          {
+            $count: "total",
+          },
+        ],
+        uploadedAllContractsCount: [
+          {
+            $match: {
+              images: {
+                $ne: [],
+              },
+            },
+          },
+          {
+            $count: "total",
+          },
+        ],
+      },
+    },
+  ]);
 
   const expiredContractsData = {
-    contracts: expiredContracts[0] ? expiredContracts[0].data : [],
-    expiredContractsCount: expiredContracts[0]
-      ? expiredContracts[0].count[0].total
+    contracts: contractData[0].expiredContracts ? contractData[0].expiredContracts : [],
+    expiredContractsCount: contractData[0].expiredContractsCount[0]
+      ? contractData[0].expiredContractsCount[0].total
+      : 0,
+    expiredAllContractsCount: contractData[0].expiredAllContractsCount[0]
+      ? contractData[0].expiredAllContractsCount[0].total
       : 0,
   };
-
   const expiringContractsData = {
-    contracts: expiringContracts[0] ? expiringContracts[0].data : [],
-    expiringContractsCount: expiringContracts[0]
-      ? expiringContracts[0].count[0].total
+    contracts: contractData[0].expiringContracts  ? contractData[0].expiringContracts : [],
+    expiringContractsCount: contractData[0].expiringContractsCount[0]
+      ? contractData[0].expiringContractsCount[0].total
+      : 0,
+    expiringAllContractsCount: contractData[0].expiringAllContractsCount[0]
+      ? contractData[0].expiringAllContractsCount[0].total
       : 0,
   };
-
-  const contractUploadedData = {
-    contracts: uploadedContracts[0] ? uploadedContracts[0].data : [],
-    totalContractUploaded: uploadedContracts[0]
-      ? uploadedContracts[0].count[0].total
+  const uploadedContractsData = {
+    contracts: contractData[0].uploadedContracts ? contractData[0].uploadedContracts : [],
+    totalContractUploaded: contractData[0].uploadedContractsCount[0]
+      ? contractData[0].uploadedContractsCount[0].total
+      : 0,
+    totalAllContractUploaded: contractData[0].uploadedAllContractsCount[0]
+      ? contractData[0].uploadedAllContractsCount[0].total
       : 0,
   };
 
@@ -701,7 +798,7 @@ export const contractDashboardCounts = asyncHandler(async (_, res) => {
     new ApiResponse(200, {
       expiringContractsData,
       expiredContractsData,
-      contractUploadedData,
+      uploadedContractsData,
     })
   );
 });
