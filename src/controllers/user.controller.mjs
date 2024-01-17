@@ -60,6 +60,7 @@ export const login = asyncHandler(async (req, res) => {
     httpOnly: true,
     secure: process.env.SECURE || false, // set to true if your using https
     sameSite: "none",
+    domain: process.env.DOMAIN,
   };
 
   return res
