@@ -334,27 +334,137 @@ export const updateImages = asyncHandler(async (req, res) => {
 // @route   GET /api/tenant/expired-cnic
 // @desc    Get expired CNIC
 // @access  Private
-export const expiredCnic = asyncHandler(async (_, res) => {
-  const cnicExpiryCount = await Tenant.aggregate([
-    {
-      $match: {
-        cnicExpiry: {
-          $lte: new Date(),
+export const expiredCnic = asyncHandler(async (req, res) => {
+  const { search, limit = 5, page = 1 } = req.query;
+  const match = {};
+  if (search) {
+    match.$or = [
+      {
+        name: {
+          $regex: search,
+          $options: "i",
         },
       },
-    },
+      {
+        cnic: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+    ];
+  }
+
+  // Pagination logic
+  const startIndex = (parseInt(page) - 1) * parseInt(limit);
+  const cnicExpiryData = await Tenant.aggregate([
     {
-      $count: "expiredCnicCount",
+      $facet: {
+        data: [
+          {
+            $match: {
+              cnicExpiry: {
+                $lte: new Date(),
+              },
+            },
+          },
+          {
+            $project: {
+              name: 1,
+              cnic: 1,
+              cnicExpiry: 1,
+            },
+          },
+          {
+            $match: match,
+          },
+          {
+            $sort: {
+              cnicExpiry: 1,
+            },
+          },
+          {
+            $skip: startIndex, // Pagination: Skip documents
+          },
+          {
+            $limit: parseInt(limit), // Pagination: Limit documents per page
+          },
+        ],
+        count: [
+          {
+            $match: {
+              cnicExpiry: {
+                $lte: new Date(),
+              },
+            },
+          },
+          {
+            $match: match,
+          },
+          {
+            $count: "expiredCnicCount",
+          },
+        ],
+        expiredCnicCount: [
+          {
+            $match: {
+              cnicExpiry: {
+                $lte: new Date(),
+              },
+            },
+          },
+          {
+            $count: "expiredCnicCount",
+          },
+        ],
+      },
     },
   ]);
 
-  const expiredCnicCount = cnicExpiryCount[0]
-    ? cnicExpiryCount[0].expiredCnicCount
-    : 0;
+  const tenantExpiredCnicData = {
+    tenants: cnicExpiryData[0] ? cnicExpiryData[0].data : [],
+    searchCount: cnicExpiryData[0].count[0]
+      ? cnicExpiryData[0].count[0].expiredCnicCount
+      : 0,
+    count: cnicExpiryData[0].expiredCnicCount[0]
+      ? cnicExpiryData[0].expiredCnicCount[0].expiredCnicCount
+      : 0,
+  };
 
   return res.status(200).json(
     new ApiResponse(200, {
-      expiredCnicCount,
+      tenantExpiredCnicData,
     })
   );
+});
+
+// @route   PATCH /api/tenant/:id/update-cnic
+// @desc    Update tenant CNIC
+// @access  Private
+export const updateCnic = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { cnicExpiry } = req.body;
+
+  // 2024-12-01 < 2024-13-01
+  if (cnicExpiry < new Date().toISOString()) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          400,
+          {},
+          "CNIC expiry date must be greater than current date"
+        )
+      );
+  }
+
+  const owner = await Tenant.findById(id);
+  if (!owner) {
+    res.status(404).json(new ApiResponse(404, {}, "Owner not found"));
+  }
+
+  owner.cnicExpiry = cnicExpiry;
+
+  await owner.save();
+
+  return res.status(200).json(new ApiResponse(200, {}, "Owner CNIC updated"));
 });
