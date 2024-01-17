@@ -2,16 +2,16 @@ import express from "express";
 import chalk from "chalk";
 import cors from "cors";
 import dotenv from "dotenv";
-import { notFound, errorHandler } from "./src/middlewares/errors.middleware.js";
-import swaggerSetup from "./swagger.js";
-import connection from "./src/db/connection.js";
-import userRouter from "./src/routes/user.routes.js";
-import inventoryRouter from "./src/routes/inventory.routes.js";
-import ownerRouter from "./src/routes/owner.routes.js";
-import tenantRouter from "./src/routes/tenant.routes.js";
-import contractRouter from "./src/routes/contract.routes.js";
-import agentRouter from "./src/routes/agent.routes.js";
-import auth from "./src/middlewares/auth.middleware.js";
+import { notFound, errorHandler } from "./src/middlewares/errors.middleware.mjs";
+import swaggerSetup from "./swagger.mjs";
+import connection from "./src/db/connection.mjs";
+import userRouter from "./src/routes/user.routes.mjs";
+import inventoryRouter from "./src/routes/inventory.routes.mjs";
+import ownerRouter from "./src/routes/owner.routes.mjs";
+import tenantRouter from "./src/routes/tenant.routes.mjs";
+import contractRouter from "./src/routes/contract.routes.mjs";
+import agentRouter from "./src/routes/agent.routes.mjs";
+import auth from "./src/middlewares/auth.middleware.mjs";
 import cookieParser from "cookie-parser";
 
 // Initialize express

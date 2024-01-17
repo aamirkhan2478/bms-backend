@@ -7,10 +7,10 @@ import {
   contractDashboardCounts,
   updateContract,
   updateImages,
-} from "../controllers/contract.controller.js";
-import validatorMiddleware from "../middlewares/validator.middleware.js";
-import upload from "../middlewares/multer.middleware.js";
-import contractSchema from "../validator/contract.validator.js";
+} from "../controllers/contract.controller.mjs";
+import validatorMiddleware from "../middlewares/validator.middleware.mjs";
+import upload from "../middlewares/multer.middleware.mjs";
+import contractSchema from "../validator/contract.validator.mjs";
 
 router
   .route("/add")

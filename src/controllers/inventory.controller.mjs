@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import Inventory from "../models/inventory.model.js";
-import SellInventory from "../models/sell_inventory.model.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import asyncHandler from "../utils/AsyncHandler.js";
+import Inventory from "../models/inventory.model.mjs";
+import SellInventory from "../models/sell_inventory.model.mjs";
+import { ApiResponse } from "../utils/ApiResponse.mjs";
+import asyncHandler from "../utils/AsyncHandler.mjs";
 
 // @route   POST /api/inventory/add
 // @desc    Add new inventory

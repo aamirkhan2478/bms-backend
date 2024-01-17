@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
-import Contract from "../models/contract.model.js";
-import mappingArray from "../utils/mapping_arrays.utils.js";
-import fileArray from "../utils/upload_images.utils.js";
-import asyncHandler from "../utils/AsyncHandler.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-// import { ApiError } from "../utils/ApiError.js";
-import OwnerSignContract from "../models/owner_sign_contract.model.js";
-import TenantSignContract from "../models/tenant_sign_contract.model.js";
-import RentalInventory from "../models/rental_inventory.model.js";
+import Contract from "../models/contract.model.mjs";
+import mappingArray from "../utils/mapping_arrays.utils.mjs";
+import fileArray from "../utils/upload_images.utils.mjs";
+import asyncHandler from "../utils/AsyncHandler.mjs";
+import { ApiResponse } from "../utils/ApiResponse.mjs";
+// import { ApiError } from "../utils/ApiError.mjs";
+import OwnerSignContract from "../models/owner_sign_contract.model.mjs";
+import TenantSignContract from "../models/tenant_sign_contract.model.mjs";
+import RentalInventory from "../models/rental_inventory.model.mjs";
 
 // @route   POST /api/contract/add
 // @desc    Add new contract

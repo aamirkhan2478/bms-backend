@@ -10,10 +10,10 @@ import {
   vacantInventories,
   soldInventories,
   updateStatus,
-} from "../controllers/inventory.controller.js";
-import validatorMiddleware from "../middlewares/validator.middleware.js";
-import inventorySchema from "../validator/inventory.validator.js";
-import sellInventorySchema from "../validator/sell_inventory.validator.js";
+} from "../controllers/inventory.controller.mjs";
+import validatorMiddleware from "../middlewares/validator.middleware.mjs";
+import inventorySchema from "../validator/inventory.validator.mjs";
+import sellInventorySchema from "../validator/sell_inventory.validator.mjs";
 const router = express.Router();
 
 router.route("/add").post(validatorMiddleware(inventorySchema), addInventory);

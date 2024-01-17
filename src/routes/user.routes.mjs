@@ -11,11 +11,11 @@ import {
   changePassword,
   deleteUser,
   currentUser,
-} from "../controllers/user.controller.js";
+} from "../controllers/user.controller.mjs";
 
-import auth from "../middlewares/auth.middleware.js";
-import validatorMiddleware from "../middlewares/validator.middleware.js";
-import authSchema from "../validator/auth.validator.js";
+import auth from "../middlewares/auth.middleware.mjs";
+import validatorMiddleware from "../middlewares/validator.middleware.mjs";
+import authSchema from "../validator/auth.validator.mjs";
 
 router.route("/register").post(auth, validatorMiddleware(authSchema), register);
 router.route("/login").post(login);

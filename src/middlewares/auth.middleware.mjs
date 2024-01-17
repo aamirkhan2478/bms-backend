@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
-import asyncHandler from "../utils/AsyncHandler.js";
-import User from "../models/user.model.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-// import { ApiError } from "../utils/ApiError.js";
+import asyncHandler from "../utils/AsyncHandler.mjs";
+import User from "../models/user.model.mjs";
+import { ApiResponse } from "../utils/ApiResponse.mjs";
+// import { ApiError } from "../utils/ApiError.mjs";
 
 const verifyToken = (res, token) => {
   if (!token) {

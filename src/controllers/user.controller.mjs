@@ -1,8 +1,8 @@
-import User from "../models/user.model.js";
+import User from "../models/user.model.mjs";
 import jwt from "jsonwebtoken";
-import { ApiError } from "../utils/ApiError.js";
-import asyncHandler from "../utils/AsyncHandler.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.mjs";
+import asyncHandler from "../utils/AsyncHandler.mjs";
+import { ApiResponse } from "../utils/ApiResponse.mjs";
 
 // @route   POST /api/user/register
 // @desc    Register new user

@@ -1,6 +1,6 @@
-import Agent from "../models/agent.model.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import asyncHandler from "../utils/AsyncHandler.js";
+import Agent from "../models/agent.model.mjs";
+import { ApiResponse } from "../utils/ApiResponse.mjs";
+import asyncHandler from "../utils/AsyncHandler.mjs";
 
 // @route   POST /api/agent/add
 // @desc    Add new agent

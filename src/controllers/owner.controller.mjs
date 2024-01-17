@@ -1,15 +1,15 @@
-import Tenant from "../models/tenant.model.js";
+import Owner from "../models/owner.model.mjs";
+import mappingArray from "../utils/mapping_arrays.utils.mjs";
+import fileArray from "../utils/upload_images.utils.mjs";
+import asyncHandler from "../utils/AsyncHandler.mjs";
+import { ApiResponse } from "../utils/ApiResponse.mjs";
 import mongoose from "mongoose";
-// import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import asyncHandler from "../utils/AsyncHandler.js";
-import mappingArray from "../utils/mapping_arrays.utils.js";
-import fileArray from "../utils/upload_images.utils.js";
+// import { ApiError } from "../utils/ApiError.mjs";
 
-// @route   POST /api/tenant/add
-// @desc    Add new tenant
+// @route   POST /api/owner/add
+// @desc    Add new owner
 // @access  Private
-export const addTenant = asyncHandler(async (req, res) => {
+export const addOwner = asyncHandler(async (req, res) => {
   const {
     name,
     father,
@@ -31,7 +31,7 @@ export const addTenant = asyncHandler(async (req, res) => {
   const emergencyNumbers = mappingArray(emergencyNumber);
   const whatsappNumbers = mappingArray(whatsapp);
 
-  // upload images
+  // Upload images
   const files = req.files;
 
   // https://domainname.com/uploads/filename-dfse3453ds.jpeg
@@ -40,12 +40,12 @@ export const addTenant = asyncHandler(async (req, res) => {
   const imagesArray = await fileArray(files, basePath);
 
   // Check if CNIC already exists
-  const cnicExist = await Tenant.findOne({ cnic });
+  const cnicExist = await Owner.findOne({ cnic });
   if (cnicExist) {
     res.status(400).json(new ApiResponse(400, {}, "CNIC already exists"));
   }
 
-  const tenant = new Tenant({
+  const owner = new Owner({
     name,
     father,
     cnic,
@@ -63,14 +63,14 @@ export const addTenant = asyncHandler(async (req, res) => {
     createdBy: id,
   });
 
-  await tenant.save();
-  return res.status(201).json(new ApiResponse(200, { tenant }, "Tenant added"));
+  await owner.save();
+  return res.status(201).json(new ApiResponse(200, { owner }, "Owner added"));
 });
 
-// @route   GET /api/tenant/all
-// @desc    Get all tenants
+// @route   GET /api/owner/all
+// @desc    Get all owners
 // @access  Private
-export const showTenants = asyncHandler(async (req, res) => {
+export const showOwners = asyncHandler(async (req, res) => {
   const { search, page = 1, limit = 5 } = req.query;
 
   // Define the match object for search
@@ -90,7 +90,7 @@ export const showTenants = asyncHandler(async (req, res) => {
   const startIndex = (page - 1) * parseInt(limit);
   const endIndex = page * parseInt(limit);
 
-  const tenants = await Tenant.aggregate([
+  const owners = await Owner.aggregate([
     {
       $lookup: {
         from: "users",
@@ -129,7 +129,7 @@ export const showTenants = asyncHandler(async (req, res) => {
     },
   ]);
 
-  const total = await Tenant.find(match).count();
+  const total = await Owner.find(match).count();
 
   // Pagination result
   const pagination = {};
@@ -151,27 +151,28 @@ export const showTenants = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { tenants, totalTenants: total, pagination },
-        "Tenants found"
+        { owners, totalOwners: total, pagination },
+        "Owners found"
       )
     );
 });
 
-// @route   GET /api/tenant/:id
-// @desc    Get single tenant
+// @route   GET /api/owner/:id
+// @desc    Get owner by id
 // @access  Private
-
-export const showTenant = asyncHandler(async (req, res) => {
+export const showOwner = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenant = await Tenant.aggregate([
+  const owner = await Owner.aggregate([
     {
-      $match: { _id: new mongoose.Types.ObjectId(id) },
+      $match: {
+        _id: new mongoose.Types.ObjectId(id),
+      },
     },
     {
       $lookup: {
-        from: "rentalinventories",
+        from: "sellinventories",
         localField: "_id",
-        foreignField: "tenantId",
+        foreignField: "ownerId",
         as: "inventories",
         pipeline: [
           {
@@ -198,7 +199,13 @@ export const showTenant = asyncHandler(async (req, res) => {
               inventoryType: 1,
               floor: 1,
               flatNo: 1,
+              purchaseDate: 1,
               isActive: 1,
+            },
+          },
+          {
+            $match: {
+              isActive: true,
             },
           },
         ],
@@ -230,25 +237,45 @@ export const showTenant = asyncHandler(async (req, res) => {
         "inventories.inventoryType": 1,
         "inventories.floor": 1,
         "inventories.flatNo": 1,
+        "inventories.purchaseDate": 1,
         "inventories.isActive": 1,
       },
     },
   ]);
 
-  if (!tenant) {
-    res.status(404).json(new ApiResponse(404, {}, "Tenant not found"));
+  if (!owner) {
+    res.status(404).json(new ApiResponse(404, {}, "Owner not found"));
   }
 
   return res
     .status(200)
-    .json(new ApiResponse(200, { tenant: tenant[0] }, "Tenant found"));
+    .json(new ApiResponse(200, { owner: owner[0] }, "Owner found"));
 });
 
-// @route   PATCH /api/tenant/:id/update
-// @desc    Update tenant
+// @route   PATCH /api/owner/:id/update-images
+// @desc    Update owner images
 // @access  Private
-export const updateTenant = asyncHandler(async (req, res) => {
+export const updateImages = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const files = req.files;
+  const basePath = `${req.protocol}://${req.get("host")}/uploads/`;
+  const imagesArray = await fileArray(files, basePath);
+
+  const owner = await Owner.findById(id);
+  if (!owner) {
+    res.status(404).json(new ApiResponse(404, {}, "Owner not found"));
+  }
+
+  owner.images = imagesArray;
+  await owner.save();
+
+  return res.status(200).json(new ApiResponse(200, {}, "Owner images updated"));
+});
+
+// @route   PATCH /api/owner/:id/update
+// @desc    Update owner
+// @access  Private
+export const updateOwner = asyncHandler(async (req, res) => {
   const {
     name,
     father,
@@ -271,67 +298,43 @@ export const updateTenant = asyncHandler(async (req, res) => {
     remarks,
   } = req.body;
 
+  const { id } = req.params;
+
   const phoneNumbers = mappingArray(phoneNumber);
   const emergencyNumbers = mappingArray(emergencyNumber);
   const whatsappNumbers = mappingArray(whatsapp);
 
-  const tenant = await Tenant.findById(id);
-
-  if (!tenant) {
-    res.status(404).json(new ApiResponse(404, {}, "Tenant not found"));
+  const owner = await Owner.findById(id);
+  if (!owner) {
+    res.status(404).json(new ApiResponse(404, {}, "Owner not found"));
   }
 
-  tenant.name = name;
-  tenant.father = father;
-  tenant.cnic = cnic;
-  tenant.cnicExpiry = cnicExpiry;
-  tenant.phoneNumber = phoneNumbers;
-  tenant.emergencyNumber = emergencyNumbers;
-  tenant.whatsapp = whatsappNumbers;
-  tenant.email = email;
-  tenant.currentAddress = currentAddress;
-  tenant.permanentAddress = permanentAddress;
-  tenant.jobTitle = jobTitle;
-  tenant.jobLocation = jobLocation;
-  tenant.jobOrganization = jobOrganization;
-  tenant.bankName = bankName;
-  tenant.bankTitle = bankTitle;
-  tenant.bankBranchAddress = bankBranchAddress;
-  tenant.bankAccountNumber = bankAccountNumber;
-  tenant.bankIbnNumber = bankIbnNumber;
-  tenant.remarks = remarks;
+  owner.name = name;
+  owner.father = father;
+  owner.cnic = cnic;
+  owner.cnicExpiry = cnicExpiry;
+  owner.phoneNumber = phoneNumbers;
+  owner.emergencyNumber = emergencyNumbers;
+  owner.whatsapp = whatsappNumbers;
+  owner.email = email;
+  owner.currentAddress = currentAddress;
+  owner.permanentAddress = permanentAddress;
+  owner.jobTitle = jobTitle;
+  owner.jobLocation = jobLocation;
+  owner.jobOrganization = jobOrganization;
+  owner.bankName = bankName;
+  owner.bankTitle = bankTitle;
+  owner.bankBranchAddress = bankBranchAddress;
+  owner.bankAccountNumber = bankAccountNumber;
+  owner.bankIbnNumber = bankIbnNumber;
+  owner.remarks = remarks;
 
-  await tenant.save();
-  return res.status(200).json(new ApiResponse(200, {}, "Tenant updated"));
+  await owner.save();
+
+  return res.status(200).json(new ApiResponse(200, {}, "Owner updated"));
 });
 
-// @route   PATCH /api/tenant/:id/update-images
-// @desc    Update tenant images
-// @access  Private
-export const updateImages = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const files = req.files;
-
-  // https://domainname.com/uploads/filename-dfse3453ds.jpeg
-  const basePath = `${req.protocol}://${req.get("host")}/uploads/`;
-
-  const imagesArray = await fileArray(files, basePath);
-
-  const tenant = await Tenant.findById(id);
-  if (!tenant) {
-    res.status(404).json(new ApiResponse(404, {}, "Tenant not found"));
-  }
-
-  tenant.images = imagesArray;
-
-  await tenant.save();
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Tenant images updated"));
-});
-
-// @route   GET /api/tenant/expired-cnic
+// @route   GET /api/owner/expired-cnic
 // @desc    Get expired CNIC
 // @access  Private
 export const expiredCnic = asyncHandler(async (req, res) => {
@@ -356,7 +359,7 @@ export const expiredCnic = asyncHandler(async (req, res) => {
 
   // Pagination logic
   const startIndex = (parseInt(page) - 1) * parseInt(limit);
-  const cnicExpiryData = await Tenant.aggregate([
+  const cnicExpiryData = await Owner.aggregate([
     {
       $facet: {
         data: [
@@ -420,8 +423,8 @@ export const expiredCnic = asyncHandler(async (req, res) => {
     },
   ]);
 
-  const tenantExpiredCnicData = {
-    tenants: cnicExpiryData[0] ? cnicExpiryData[0].data : [],
+  const ownerExpiredCnicData = {
+    owners: cnicExpiryData[0].data ? cnicExpiryData[0].data : [],
     searchCount: cnicExpiryData[0].count[0]
       ? cnicExpiryData[0].count[0].expiredCnicCount
       : 0,
@@ -432,13 +435,13 @@ export const expiredCnic = asyncHandler(async (req, res) => {
 
   return res.status(200).json(
     new ApiResponse(200, {
-      tenantExpiredCnicData,
+      ownerExpiredCnicData,
     })
   );
 });
 
-// @route   PATCH /api/tenant/:id/update-cnic
-// @desc    Update tenant CNIC
+// @route   PATCH /api/owner/:id/update-cnic
+// @desc    Update owner CNIC
 // @access  Private
 export const updateCnic = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -457,7 +460,7 @@ export const updateCnic = asyncHandler(async (req, res) => {
       );
   }
 
-  const owner = await Tenant.findById(id);
+  const owner = await Owner.findById(id);
   if (!owner) {
     res.status(404).json(new ApiResponse(404, {}, "Owner not found"));
   }

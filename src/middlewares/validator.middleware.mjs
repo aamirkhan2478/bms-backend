@@ -1,6 +1,6 @@
 // import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import asyncHandler from "../utils/AsyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.mjs";
+import asyncHandler from "../utils/AsyncHandler.mjs";
 
 const validatorMiddleware = (schema) =>
   asyncHandler(async (req, res, next) => {
