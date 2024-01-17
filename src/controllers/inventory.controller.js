@@ -89,6 +89,48 @@ export const showInventories = asyncHandler(async (req, res) => {
   const inventories = await Inventory.aggregate([
     {
       $lookup: {
+        from: "sellinventories", // Name of the OwnerInventory collection
+        localField: "_id", // Field from the Inventory collection
+        foreignField: "inventoryId", // Field from the OwnerInventory collection
+        as: "ownerInventory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "owners", // Name of the Owner collection
+              localField: "ownerId", // Field from the OwnerInventory collection
+              foreignField: "_id", // Field from the Owner collection
+              as: "owners",
+            },
+          },
+          {
+            $unwind: "$owners",
+          },
+          {
+            $addFields: {
+              ownerId: "$owners._id",
+              ownerName: "$owners.name",
+              purchaseDate: "$purchaseDate",
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              ownerId: 1,
+              ownerName: 1,
+              isActive: 1,
+              purchaseDate: 1,
+            },
+          },
+          {
+            $match: {
+              isActive: true,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $lookup: {
         from: "users",
         localField: "createdBy",
         foreignField: "_id",
@@ -111,7 +153,7 @@ export const showInventories = asyncHandler(async (req, res) => {
         inventoryType: 1,
         floor: 1,
         flatNo: 1,
-        status: 1,
+        "ownerInventory.ownerName": 1,
         createdBy: 1,
         createdAt: 1,
       },
@@ -305,144 +347,250 @@ export const updateInventory = asyncHandler(async (req, res) => {
 // @route   GET /api/inventory/open-for-sale
 // @desc    Get how many inventories that are open for sale
 // @access  Private
-export const inventoryOpenForSell = asyncHandler(async (_, res) => {
-  const inventoriesForSell = await Inventory.aggregate([
-    {
-      $match: {
-        status: "for sell",
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        totalInventories: {
-          $sum: 1,
+export const inventoryOpenForSell = asyncHandler(async (req, res) => {
+  const { search, limit = 5, page = 1 } = req.query;
+  const match = {};
+  if (search) {
+    match.$or = [
+      {
+        inventoryType: {
+          $regex: search,
+          $options: "i",
         },
       },
-    },
+      {
+        floor: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+      {
+        flatNo: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+    ];
+  }
+
+  // Pagination logic
+  const startIndex = (parseInt(page) - 1) * parseInt(limit);
+  const inventoriesForSell = await Inventory.aggregate([
     {
-      $project: {
-        _id: 0,
-        totalInventories: 1,
+      $facet: {
+        inventories: [
+          {
+            $match: {
+              status: "for sell",
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              inventoryType: 1,
+              floor: 1,
+              flatNo: 1,
+            },
+          },
+          {
+            $match: match,
+          },
+          {
+            $skip: startIndex, // Pagination: Skip documents
+          },
+          {
+            $limit: parseInt(limit), // Pagination: Limit documents per page
+          },
+        ],
+        count: [
+          {
+            $match: {
+              status: "for sell",
+            },
+          },
+          {
+            $match: match,
+          },
+          {
+            $count: "totalInventories",
+          },
+        ],
+        allInventoriesCount: [
+          {
+            $match: {
+              status: "for sell",
+            },
+          },
+          {
+            $count: "totalInventories",
+          },
+        ],
       },
     },
   ]);
 
-  const totalInventories = inventoriesForSell[0]
-    ? inventoriesForSell[0].totalInventories
-    : 0;
+  const openForSellInventories = {
+    inventories: inventoriesForSell[0] ? inventoriesForSell[0].inventories : [],
+    count: inventoriesForSell[0].count[0]
+      ? inventoriesForSell[0].count[0].totalInventories
+      : 0,
+    allInventoriesCount: inventoriesForSell[0].allInventoriesCount[0]
+      ? inventoriesForSell[0].allInventoriesCount[0].totalInventories
+      : 0,
+  };
 
   return res
     .status(200)
-    .json(new ApiResponse(200, { totalInventories }, "Inventories found"));
+    .json(
+      new ApiResponse(200, { openForSellInventories }, "Inventories found")
+    );
 });
 
 // @route   GET /api/inventory/vacant-inventories
 // @desc    Get vacant inventories
 // @access  Private
-export const vacantInventories = asyncHandler(async (_, res) => {
-  const vacantFlatInventories = await Inventory.aggregate([
+export const vacantInventories = asyncHandler(async (req, res) => {
+  const { search, limit = 5, page = 1 } = req.query;
+  const match = {};
+  if (search) {
+    match.$or = [
+      {
+        inventoryType: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+      {
+        floor: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+      {
+        flatNo: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+    ];
+  }
+
+  // Pagination logic
+  const startIndex = (parseInt(page) - 1) * parseInt(limit);
+  const aggregatedData = await Inventory.aggregate([
     {
-      $match: {
-        $and: [
+      $facet: {
+        vacantInventories: [
           {
-            inventoryType: "Flat",
+            $match: {
+              status: "vacant",
+            },
           },
           {
-            status: "vacant",
+            $project: {
+              _id: 1,
+              inventoryType: 1,
+              floor: 1,
+              flatNo: 1,
+            },
+          },
+          {
+            $match: match,
+          },
+          {
+            $skip: startIndex, // Pagination: Skip documents
+          },
+          {
+            $limit: parseInt(limit), // Pagination: Limit documents per page
+          },
+        ],
+        count: [
+          {
+            $match: {
+              status: "vacant",
+            },
+          },
+          {
+            $match: match,
+          },
+          {
+            $count: "totalInventories",
+          },
+        ],
+        flatCount: [
+          {
+            $match: {
+              $and: [
+                {
+                  inventoryType: "Flat",
+                },
+                {
+                  status: "vacant",
+                },
+              ],
+            },
+          },
+          {
+            $count: "totalFlatInventories",
+          },
+        ],
+        officeCount: [
+          {
+            $match: {
+              $and: [
+                {
+                  inventoryType: "Office",
+                },
+                {
+                  status: "vacant",
+                },
+              ],
+            },
+          },
+          {
+            $count: "totalOfficeInventories",
+          },
+        ],
+        shopCount: [
+          {
+            $match: {
+              $and: [
+                {
+                  inventoryType: "Shop",
+                },
+                {
+                  status: "vacant",
+                },
+              ],
+            },
+          },
+          {
+            $count: "totalShopInventories",
           },
         ],
       },
     },
-    {
-      $group: {
-        _id: null,
-        totalFlatInventories: {
-          $sum: 1,
-        },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        totalFlatInventories: 1,
-      },
-    },
   ]);
 
-  const vacantShopInventories = await Inventory.aggregate([
-    {
-      $match: {
-        $and: [
-          {
-            inventoryType: "Shop",
-          },
-          {
-            status: "vacant",
-          },
-        ],
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        totalShopInventories: {
-          $sum: 1,
-        },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        totalShopInventories: 1,
-      },
-    },
-  ]);
-
-  const vacantOfficeInventories = await Inventory.aggregate([
-    {
-      $match: {
-        $and: [
-          {
-            inventoryType: "Office",
-          },
-          {
-            status: "vacant",
-          },
-        ],
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        totalOfficeInventories: {
-          $sum: 1,
-        },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        totalOfficeInventories: 1,
-      },
-    },
-  ]);
-
-  const vacantOfficeInventoriesCount = vacantOfficeInventories[0]
-    ? vacantOfficeInventories[0].totalOfficeInventories
-    : 0;
-  const vacantShopInventoriesCount = vacantShopInventories[0]
-    ? vacantShopInventories[0].totalShopInventories
-    : 0;
-  const vacantFlatInventoriesCount = vacantFlatInventories[0]
-    ? vacantFlatInventories[0].totalFlatInventories
-    : 0;
+  const vacantInventories = {
+    inventories: aggregatedData[0] ? aggregatedData[0].vacantInventories : [],
+    count: aggregatedData[0].count[0]
+      ? aggregatedData[0].count[0].totalInventories
+      : 0,
+    totalFlatInventories: aggregatedData[0].flatCount[0]
+      ? aggregatedData[0].flatCount[0].totalFlatInventories
+      : 0,
+    totalOfficeInventories: aggregatedData[0].officeCount[0]
+      ? aggregatedData[0].officeCount[0].totalOfficeInventories
+      : 0,
+    totalShopInventories: aggregatedData[0].shopCount[0]
+      ? aggregatedData[0].shopCount[0].totalShopInventories
+      : 0,
+  };
 
   return res.status(200).json(
     new ApiResponse(200, {
-      vacantOfficeInventoriesCount,
-      vacantShopInventoriesCount,
-      vacantFlatInventoriesCount,
+      vacantInventories,
     })
   );
 });
@@ -568,7 +716,7 @@ export const soldInventories = asyncHandler(async (req, res) => {
       match,
     ],
   }).count();
-  
+
   // Pagination result
   const pagination = {};
   if (endIndex < total) {
