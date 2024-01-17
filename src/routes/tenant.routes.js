@@ -7,6 +7,7 @@ import {
   updateImages,
   updateTenant,
   expiredCnic,
+  updateCnic
 } from "../controllers/tenant.controller.js";
 import validatorMiddleware from "../middlewares/validator.middleware.js";
 import upload from "../middlewares/multer.middleware.js";
@@ -28,5 +29,6 @@ router
   .route("/:id/update")
   .patch(validatorMiddleware(ownerTenantSchema), updateTenant);
 router.route("/expired-cnic").get(expiredCnic);
+router.route("/:id/update-cnic").patch(updateCnic);
 
 export default router;
